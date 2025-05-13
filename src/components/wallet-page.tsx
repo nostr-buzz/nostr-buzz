@@ -26,7 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
+import { Html5QrcodeScannerState, type Html5QrcodeResult } from "html5-qrcode";
 
 // Dummy data for transactions
 const dummyTransactions = [
@@ -70,82 +71,108 @@ export function WalletPage() {
 
   const qrReaderElementId = "qr-reader";
 
-  const startScanner = () => {
+  const startScanner = async () => {
     if (html5QrCodeInstance.current) {
-      html5QrCodeInstance.current.clear();
+      try {
+        if (html5QrCodeInstance.current.getState() === Html5QrcodeScannerState.SCANNING || 
+            html5QrCodeInstance.current.getState() === Html5QrcodeScannerState.PAUSED) {
+          await html5QrCodeInstance.current.stop();
+        }
+        await html5QrCodeInstance.current.clear();
+      } catch (error) {
+        console.warn("Error stopping/clearing previous scanner instance:", error);
+      }
+      html5QrCodeInstance.current = null;
     }
-
-    const newHtml5QrCode = new Html5Qrcode(qrReaderElementId);
+  
+    setScannerMessage("Initializing camera...");
+    const newHtml5QrCode = new Html5Qrcode(qrReaderElementId, false);
     html5QrCodeInstance.current = newHtml5QrCode;
-    setScannerMessage("Starting camera...");
 
-    const qrCodeSuccessCallback = (decodedText: string, decodedResult: any) => {
+    const qrCodeSuccessCallback = (decodedText: string, decodedResult: Html5QrcodeResult) => {
       console.log(`QR Code detected: ${decodedText}`, decodedResult);
       setScannedData(decodedText);
       setSendRecipient(decodedText);
       setIsScannerOpen(false);
       alert(`Scanned: ${decodedText}\nRecipient field in Send dialog has been populated.`);
-      if (html5QrCodeInstance.current && html5QrCodeInstance.current.getState() === Html5QrcodeScannerState.SCANNING) {
-        html5QrCodeInstance.current.stop().then(() => {
-          console.log("QR Code scanning stopped successfully.");
-        }).catch((err) => {
-          console.error("Failed to stop QR Code scanning.", err);
-        });
-      }
     };
 
-    const qrCodeErrorCallback = (errorMessage: string) => {};
+    const qrCodeErrorCallback = (errorMessage: string, error: any) => {
+      if (error) {
+        if (errorMessage.includes("Cannot start camera")) {
+          setScannerMessage("Error: Cannot start camera. Check permissions.");
+        } else if (errorMessage.includes("Camera not found")) {
+          setScannerMessage("Error: Camera not found.");
+        }
+      }
+    };
 
     const config = { 
       fps: 10, 
       qrbox: { width: 250, height: 250 },
       rememberLastUsedCamera: true,
+      aspectRatio: 1.0
     };
 
-    newHtml5QrCode.start(
-      { facingMode: "environment" },
-      config,
-      qrCodeSuccessCallback,
-      qrCodeErrorCallback
-    ).then(() => {
+    try {
+      await newHtml5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        qrCodeSuccessCallback,
+        qrCodeErrorCallback
+      );
       setScannerMessage("Scanning... Point camera at a QR code.");
-    }).catch((err) => {
+    } catch (err: any) {
       console.error("Error starting QR scanner:", err);
-      setScannerMessage(`Error starting scanner: ${err.message}. Check camera permissions.`);
-    });
-  };
-
-  const stopScanner = () => {
-    if (html5QrCodeInstance.current) {
-      if (html5QrCodeInstance.current.getState() === Html5QrcodeScannerState.SCANNING || 
-          html5QrCodeInstance.current.getState() === Html5QrcodeScannerState.PAUSED) {
-        html5QrCodeInstance.current.stop()
-          .then(() => {
-            console.log("QR Scanner stopped.");
-            setScannerMessage("Scanner stopped.");
-          })
-          .catch((err) => {
-            console.error("Error stopping QR scanner:", err);
-            setScannerMessage("Error stopping scanner.");
-          })
-          .finally(() => {
-            html5QrCodeInstance.current = null;
-          });
-      } else if (html5QrCodeInstance.current.getState() === Html5QrcodeScannerState.NOT_STARTED) {
-         html5QrCodeInstance.current = null;
+      setScannerMessage(`Error: ${err.message || "Failed to start scanner."}`);
+      if (html5QrCodeInstance.current) {
+        try {
+          await html5QrCodeInstance.current.clear();
+        } catch (clearError) {
+          console.warn("Error clearing scanner UI after start failure:", clearError);
+        }
+        html5QrCodeInstance.current = null;
       }
     }
   };
 
+  const stopScanner = async () => {
+    if (html5QrCodeInstance.current) {
+      const scannerState = html5QrCodeInstance.current.getState();
+      if (scannerState === Html5QrcodeScannerState.SCANNING || scannerState === Html5QrcodeScannerState.PAUSED) {
+        try {
+          setScannerMessage("Stopping scanner...");
+          await html5QrCodeInstance.current.stop();
+          console.log("QR Scanner stopped.");
+          setScannerMessage("Scanner stopped.");
+        } catch (err) {
+          console.error("Error stopping QR scanner:", err);
+          setScannerMessage("Error stopping scanner.");
+        }
+      }
+      try {
+        await html5QrCodeInstance.current.clear();
+      } catch(clearError) {
+        console.warn("Error clearing scanner UI elements:", clearError);
+      }
+      html5QrCodeInstance.current = null;
+    }
+  };
+  
+
   useEffect(() => {
+    let startTimeoutId: NodeJS.Timeout;
     if (isScannerOpen) {
-      const timer = setTimeout(() => {
+      startTimeoutId = setTimeout(() => {
         startScanner();
       }, 100); 
-      return () => clearTimeout(timer);
     } else {
       stopScanner();
     }
+    return () => {
+      clearTimeout(startTimeoutId);
+      stopScanner();
+    };
   }, [isScannerOpen]);
 
   return (
@@ -301,9 +328,12 @@ export function WalletPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center">
-              <div id={qrReaderElementId} className="w-full md:w-[400px] h-auto aspect-square mb-4 border border-dashed border-muted-foreground rounded-md overflow-hidden">
+              <div 
+                id={qrReaderElementId} 
+                className="w-full md:w-[300px] h-auto md:h-[300px] mb-4 bg-muted rounded-md overflow-hidden"
+              >
               </div>
-              <p className="text-sm text-muted-foreground min-h-[20px]">
+              <p className="text-sm text-muted-foreground min-h-[20px] text-center">
                 {scannerMessage}
               </p>
               {scannedData && (
