@@ -23,7 +23,7 @@ function App() {
             <Input
               type="search"
               placeholder="Search Nostr Buzz or type a command..."
-              className="flex-grow h-10 px-0 py-2 text-base bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="flex-grow h-10 px-0 py-2 text-base bg-transparent dark:bg-zinc-950 border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             {/* Optional: Add a search button if needed, or rely on Enter key */}
             {/* <Button type="submit" size="icon" className="rounded-full">
@@ -31,7 +31,7 @@ function App() {
             </Button> */}
           </form>
           <div className="mt-6 flex space-x-3">
-            <Button variant="secondary" size="sm">Nostr Buzz Search</Button>
+            <Button size="sm">Nostr Buzz Search</Button>
             <Button variant="secondary" size="sm">I'm Feeling Lucky</Button>
           </div>
         </div>
