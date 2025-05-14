@@ -36,6 +36,7 @@
     "framer-motion": "^12.11.0",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.510.0",
+    "nostr-tools": "^2.13.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.0",

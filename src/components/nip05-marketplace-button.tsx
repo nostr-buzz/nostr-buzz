@@ -1,29 +1,38 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-import { useAppContext } from "@/App"; // Import useAppContext
+import { useAppContext } from "@/App";
 
 export function Nip05MarketplaceButton() {
   const navigate = useNavigate();
-  const { setIsLoading } = useAppContext();
+  
+  // Conditionally use context with try-catch to prevent errors
+  let setIsLoading: React.Dispatch<React.SetStateAction<boolean>> | undefined;
+  try {
+    const context = useAppContext();
+    setIsLoading = context.setIsLoading;
+  } catch (error) {
+    // Context not available, handle gracefully
+    console.log("AppContext not available yet");
+  }
 
   const handleClick = () => {
-    setIsLoading(true);
-    // Simulate API call delay before navigation
+    // Only use setIsLoading if it's available
+    if (setIsLoading) {
+      setIsLoading(true);
+    }
+    
     setTimeout(() => {
-      navigate("/nip05-marketplace");
-      // setIsLoading will be set to false in Nip05MarketplacePage's useEffect
-    }, 300); // Adjust delay as needed, shorter for internal nav
+      navigate('/nip05-marketplace');
+      if (setIsLoading) {
+        setIsLoading(false);
+      }
+    }, 300);
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleClick} // Updated onClick handler
-    >
-      <ShoppingCart className="h-4 w-4 mr-2" />
-      NIP-05 Marketplace
+    <Button variant="outline" size="icon" onClick={handleClick}>
+      <ShoppingCart className="h-[1.2rem] w-[1.2rem]" />
     </Button>
   );
 }

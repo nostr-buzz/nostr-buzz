@@ -7,14 +7,15 @@ import { Search } from "lucide-react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ProfilePage } from "@/components/profile-page";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, createContext, useContext, useEffect } from "react";
+import { useState, createContext, useContext, useEffect, type FormEvent } from "react";
 import { GlobalSpinner } from "@/components/global-spinner";
-import { Nip05MarketplaceButton } from "@/components/nip05-marketplace-button"; // Import the new component
+import { StandaloneNip05Button } from "@/components/standalone-nip05-button"; // Import the standalone button
 import { Nip05MarketplacePage } from "@/components/nip05-marketplace-page"; // Import the new page
 import { EcosystemDirectoryPage } from "@/components/ecosystem-directory-page"; // Import Ecosystem page
 import { WalletPage } from "@/components/wallet-page"; // Import Wallet page
 import { EcosystemItemPage } from "@/components/ecosystem-item-page"; // Import Ecosystem Item page
 import { Compass, Wallet as WalletIcon } from "lucide-react"; // Import icons for buttons
+import { NostrProvider } from "@/context/NostrContext"; // Import NostrProvider
 
 // Create a context for loading state
 interface AppContextType {
@@ -56,17 +57,43 @@ const pageTransition = {
 function SearchPage() {
   const navigate = useNavigate();
   const { setIsLoading } = useAppContext();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  const handleNavigation = (path: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      navigate(path);
-    }, 500); // Adjust delay as needed
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    setSearchError(null);
+
+    // Check if input is provided
+    if (!searchQuery.trim()) {
+      return;
+    }
+
+    const query = searchQuery.trim();
+    
+    // Validate if input is npub or hex key
+    if (query.startsWith("npub1") || /^[0-9a-f]{64}$/.test(query)) {
+      console.log(`Navigating to profile with identifier: ${query}`);
+      setIsLoading(true);
+      navigate(`/profile/${query}`);
+    } else {
+      // Show error message for invalid format
+      setSearchError("Please enter a valid Nostr public key (npub) or hex key");
+      setTimeout(() => setSearchError(null), 4000); // Clear error after 4 seconds
+    }
   };
 
   useEffect(() => {
     setIsLoading(false);
   }, [setIsLoading]);
+
+  const handleNavigation = (path: string) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      navigate(path);
+      setIsLoading(false);
+    }, 500);
+  };
 
   return (
     <motion.div
@@ -84,24 +111,38 @@ function SearchPage() {
       />
 
       <form
-        className="w-full flex items-center space-x-2 rounded-full border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 shadow-md"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleNavigation("/profile"); // Default search action
-        }}
+        className="w-full flex flex-col space-y-2"
+        onSubmit={handleSearch}
       >
-        <div className="pl-3 pr-1">
-          <Search className="size-5 text-muted-foreground" />
+        <div className="flex items-center space-x-2 rounded-full border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 shadow-md">
+          <div className="pl-3 pr-1">
+            <Search className="size-5 text-muted-foreground" />
+          </div>
+          <Input
+            type="search"
+            placeholder="Enter a Nostr npub or hex key..."
+            className="flex-grow h-10 px-0 py-2 text-base bg-transparent dark:bg-zinc-900 border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-        <Input
-          type="search"
-          placeholder="Search Nostr Buzz or type a command..."
-          className="flex-grow h-10 px-0 py-2 text-base bg-transparent dark:bg-zinc-900 border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
+
+        {/* Error message */}
+        {searchError && (
+          <div className="text-sm text-red-500 font-medium text-center mt-1">
+            {searchError}
+          </div>
+        )}
+
+        {/* Example text */}
+        <div className="text-xs text-muted-foreground text-center">
+          Example: npub1z13g38a6qypp6py2z07shggg45cu8qex992xpss7d8zr128mu52s4cjajh
+        </div>
       </form>
-      <div className="mt-6 flex flex-wrap justify-center gap-3"> {/* Changed to flex-wrap and gap */}
-        <Button size="sm" onClick={() => handleNavigation("/profile")}>
-          Nostr Buzz Search
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <Button type="submit" size="sm" onClick={handleSearch}>
+          Search Nostr Profile
         </Button>
         <Button variant="secondary" size="sm">
           I'm Feeling Lucky
@@ -126,96 +167,112 @@ function App() {
   return (
     <AppContext.Provider value={{ isLoading, setIsLoading }}>
       <ThemeProvider defaultTheme="system" storageKey="theme">
-        {isLoading && <GlobalSpinner />}
-        <div className="relative flex flex-col items-center justify-center min-h-svh p-4 bg-background text-foreground overflow-x-hidden">
-          {/* Container for top-right buttons */}
-          <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
-            <Nip05MarketplaceButton /> {/* Add the new button here */}
-            <ThemeToggle />
-          </div>
+        <NostrProvider>
+          {isLoading && <GlobalSpinner />}
+          <div className="relative flex flex-col items-center justify-center min-h-svh p-4 bg-background text-foreground overflow-x-hidden">
+            {/* Container for top-right buttons */}
+            <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
+              <StandaloneNip05Button /> {/* Use the standalone button instead */}
+              <ThemeToggle />
+            </div>
 
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<SearchPage />} />
-              <Route
-                path="/profile"
-                element={
-                  <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                    className="w-full"
-                  >
-                    <ProfilePage />
-                  </motion.div>
-                }
-              />
-              <Route
-                path="/nip05-marketplace"
-                element={
-                  <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                    className="w-full"
-                  >
-                    <Nip05MarketplacePage />
-                  </motion.div>
-                }
-              />
-              <Route
-                path="/ecosystem"
-                element={
-                  <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                    className="w-full"
-                  >
-                    <EcosystemDirectoryPage />
-                  </motion.div>
-                }
-              />
-              <Route
-                path="/ecosystem/:categorySlug/:itemSlug" // New dynamic route
-                element={
-                  <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                    className="w-full"
-                  >
-                    <EcosystemItemPage />
-                  </motion.div>
-                }
-              />
-              <Route
-                path="/wallet"
-                element={
-                  <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                    className="w-full"
-                  >
-                    <WalletPage />
-                  </motion.div>
-                }
-              />
-              {/* Example for dynamic profile: <Route path="/profile/:npub" element={<ProfilePage />} /> */}
-            </Routes>
-          </AnimatePresence>
-        </div>
+            <AnimatePresence mode="wait">
+              <Routes location={location} key={location.pathname}>
+                <Route path="/" element={<SearchPage />} />
+                <Route
+                  path="/profile"
+                  element={
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                      className="w-full"
+                    >
+                      <ProfilePage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/profile/:identifier"
+                  element={
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                      className="w-full"
+                    >
+                      <ProfilePage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/nip05-marketplace"
+                  element={
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                      className="w-full"
+                    >
+                      <Nip05MarketplacePage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/ecosystem"
+                  element={
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                      className="w-full"
+                    >
+                      <EcosystemDirectoryPage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/ecosystem/:categorySlug/:itemSlug"
+                  element={
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                      className="w-full"
+                    >
+                      <EcosystemItemPage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/wallet"
+                  element={
+                    <motion.div
+                      initial="initial"
+                      animate="in"
+                      exit="out"
+                      variants={pageVariants}
+                      transition={pageTransition}
+                      className="w-full"
+                    >
+                      <WalletPage />
+                    </motion.div>
+                  }
+                />
+              </Routes>
+            </AnimatePresence>
+          </div>
+        </NostrProvider>
       </ThemeProvider>
     </AppContext.Provider>
   );
