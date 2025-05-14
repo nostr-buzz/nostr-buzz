@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ThemeToggle } from "@/components/theme-toggle";
-import viteLogo from "/logo.png"; // Import SVG as a URL
+import logoDark from "/logo-b.png"; // Import dark theme logo
+import logoLight from "/logo-w.png"; // Import light theme logo
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -16,6 +17,9 @@ import { WalletPage } from "@/components/wallet-page"; // Import Wallet page
 import { EcosystemItemPage } from "@/components/ecosystem-item-page"; // Import Ecosystem Item page
 import { Compass, Wallet as WalletIcon } from "lucide-react"; // Import icons for buttons
 import { NostrProvider } from "@/context/NostrContext"; // Import NostrProvider
+import { useTheme } from "@/hooks/use-theme";
+import React from "react";
+import { StandaloneWalletButton } from "./components/standalone-wallet-button";
 
 // Create a context for loading state
 interface AppContextType {
@@ -59,6 +63,17 @@ function SearchPage() {
   const { setIsLoading } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchError, setSearchError] = useState<string | null>(null);
+  const { theme, effectiveTheme } = useTheme(); // Replace resolvedTheme with effectiveTheme
+  
+  // Determine which logo to use based on theme and system preference
+  const logoToUse = React.useMemo(() => {
+    // If theme is explicitly set to dark or light, use that
+    if (theme === "dark") return logoLight;
+    if (theme === "light") return logoDark;
+    
+    // If theme is system, use the effective theme
+    return effectiveTheme === "dark" ? logoLight : logoDark;
+  }, [theme, effectiveTheme]); // Update dependency array
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -104,10 +119,11 @@ function SearchPage() {
       transition={pageTransition}
       className="flex flex-col items-center w-full max-w-xl"
     >
+      {/* Theme-aware logo using the determined logo */}
       <img
-        src={viteLogo}
-        alt="Vite Logo"
-        className="h-32 w-auto mb-8 text-sky-500 dark:text-sky-400"
+        src={logoToUse}
+        alt="NOSTR BUZZ"
+        className="h-32 w-auto mb-8"
       />
 
       <form
@@ -144,17 +160,11 @@ function SearchPage() {
         <Button type="submit" size="sm" onClick={handleSearch}>
           Search Nostr Profile
         </Button>
-        <Button variant="secondary" size="sm">
-          I'm Feeling Lucky
-        </Button>
         <Button variant="secondary" size="sm" onClick={() => handleNavigation("/ecosystem")}>
           <Compass className="h-4 w-4 mr-2" />
           Ecosystem
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => handleNavigation("/wallet")}>
-          <WalletIcon className="h-4 w-4 mr-2" />
-          Wallet
-        </Button>
+
       </div>
     </motion.div>
   );
@@ -172,7 +182,8 @@ function App() {
           <div className="relative flex flex-col items-center justify-center min-h-svh p-4 bg-background text-foreground overflow-x-hidden">
             {/* Container for top-right buttons */}
             <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
-              <StandaloneNip05Button /> {/* Use the standalone button instead */}
+              <StandaloneNip05Button /> 
+              <StandaloneWalletButton /> 
               <ThemeToggle />
             </div>
 

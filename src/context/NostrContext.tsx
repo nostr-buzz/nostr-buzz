@@ -13,14 +13,18 @@ type NostrContextType = {
 
 const NostrContext = createContext<NostrContextType | undefined>(undefined);
 
-// Define default relays for fallback
+// Define default relays for fallback - using only the most reliable ones
 const DEFAULT_RELAYS = [
   'wss://relay.damus.io',
-  'wss://relay.nostr.band',
-  'wss://nos.lol',
-  'wss://relay.snort.social',
-  'wss://relay.current.fyi'
+  'wss://relay.primal.net',
+  'wss://purplepag.es',
+  'wss://nostr-pub.wellorder.net',
+  'wss://relay.nostr.band'
 ];
+
+// Timeout values in milliseconds
+const CONNECTION_TIMEOUT = 3000;
+const FETCH_TIMEOUT = 4000;
 
 export function NostrProvider({ children }: { children: React.ReactNode }) {
   const [userRelays, setUserRelays] = useState<string[]>([]);
@@ -32,6 +36,7 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
 
   const [pool] = useState(() => new SimplePool());
   const lookupInProgress = useRef<Record<string, boolean>>({});
+  const activeRelaysRef = useRef<Set<string>>(new Set());
   const discoverRelay = 'wss://purplepag.es';
 
   useEffect(() => {
@@ -47,12 +52,27 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
+  const safeGetFromRelay = useCallback(async (relays: string[], filter: any, timeoutMs = FETCH_TIMEOUT) => {
+    try {
+      const safeRelays = relays.slice(0, 3);
+      console.log(`Attempting to fetch from relays:`, safeRelays);
+      return await Promise.race([
+        pool.get(safeRelays, filter),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs))
+      ]);
+    } catch (e) {
+      console.warn('Error in safeGetFromRelay:', e);
+      return null;
+    }
+  }, [pool]);
+
   const fetchUserRelays = useCallback(async (pubkey: string) => {
     try {
       console.log('Fetching relays for pubkey:', pubkey);
+      activeRelaysRef.current.clear();
 
       try {
-        const relayListEvents = await pool.get([discoverRelay], {
+        const relayListEvents = await safeGetFromRelay([discoverRelay], {
           kinds: [10002],
           authors: [pubkey],
           limit: 1
@@ -62,12 +82,15 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
           const relayUrls = relayListEvents.tags
             .filter((tag: any) => tag[0] === 'r')
             .map((tag: any) => tag[1])
-            .map(url => url.replace(/\/$/, ''));
+            .map(url => url.replace(/\/$/, ''))
+            .filter((url, index, self) => self.indexOf(url) === index);
 
           if (relayUrls.length > 0) {
             console.log(`Found ${relayUrls.length} relays from ${discoverRelay}`);
             const uniqueRelays = [...new Set([...DEFAULT_RELAYS, ...relayUrls])];
-            setUserRelays(uniqueRelays);
+            const validRelays = uniqueRelays.filter(url => url.startsWith('wss://'));
+            setUserRelays(validRelays);
+            validRelays.forEach(relay => activeRelaysRef.current.add(relay));
             return;
           }
         }
@@ -77,11 +100,13 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Using default relays');
       setUserRelays(DEFAULT_RELAYS);
+      DEFAULT_RELAYS.forEach(relay => activeRelaysRef.current.add(relay));
     } catch (e) {
       console.error('Error in fetchUserRelays:', e);
       setUserRelays(DEFAULT_RELAYS);
+      DEFAULT_RELAYS.forEach(relay => activeRelaysRef.current.add(relay));
     }
-  }, [pool, discoverRelay]);
+  }, [safeGetFromRelay, discoverRelay]);
 
   const fetchUserProfile = useCallback(async (pubkey: string) => {
     const currentRelays = userRelays.length > 0 ? userRelays : DEFAULT_RELAYS;
@@ -91,52 +116,33 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
 
       let userMetadata = null;
 
-      try {
-        userMetadata = await Promise.race([
-          pool.get(DEFAULT_RELAYS.slice(0, 3), {
+      const reliableRelays = ['wss://purplepag.es', 'wss://relay.primal.net'];
+      userMetadata = await safeGetFromRelay(reliableRelays, {
+        kinds: [0],
+        authors: [pubkey],
+        limit: 1
+      });
+
+      if (!userMetadata) {
+        const subsetRelays = currentRelays.slice(0, 2);
+        userMetadata = await safeGetFromRelay(subsetRelays, {
+          kinds: [0],
+          authors: [pubkey],
+          limit: 1
+        });
+      }
+
+      if (!userMetadata) {
+        for (const relay of ['wss://relay.damus.io', 'wss://nostr-pub.wellorder.net']) {
+          userMetadata = await safeGetFromRelay([relay], {
             kinds: [0],
             authors: [pubkey],
             limit: 1
-          }),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
-        ]);
-      } catch (e) {
-        console.warn('Error fetching from default relays:', e);
-      }
+          });
 
-      if (!userMetadata) {
-        try {
-          userMetadata = await Promise.race([
-            pool.get(currentRelays, {
-              kinds: [0],
-              authors: [pubkey],
-              limit: 1
-            }),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000))
-          ]);
-        } catch (e) {
-          console.warn('Error fetching from user relays:', e);
-        }
-      }
-
-      if (!userMetadata) {
-        for (const relay of ['wss://relay.damus.io', 'wss://nos.lol']) {
-          try {
-            userMetadata = await Promise.race([
-              pool.get([relay], {
-                kinds: [0],
-                authors: [pubkey],
-                limit: 1
-              }),
-              new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
-            ]);
-
-            if (userMetadata) {
-              console.log(`Found profile on ${relay}`);
-              break;
-            }
-          } catch (e) {
-            console.warn(`Error fetching from ${relay}:`, e);
+          if (userMetadata) {
+            console.log(`Found profile on ${relay}`);
+            break;
           }
         }
       }
@@ -180,13 +186,13 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
       });
       return false;
     }
-  }, [pool, userRelays]);
+  }, [safeGetFromRelay, userRelays]);
 
   const fetchUserBadges = useCallback(async (pubkey: string) => {
     try {
       const currentRelays = userRelays.length > 0 ? userRelays : DEFAULT_RELAYS;
 
-      const badgeEvents = await pool.get(currentRelays, {
+      const badgeEvents = await safeGetFromRelay(currentRelays, {
         kinds: [30009],
         authors: [pubkey],
         limit: 50
@@ -200,7 +206,7 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('Error fetching user badges:', e);
     }
-  }, [pool, userRelays]);
+  }, [safeGetFromRelay, userRelays]);
 
   const lookupUser = useCallback(async (identifier: string) => {
     if (lookupInProgress.current[identifier]) {
@@ -253,12 +259,17 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
   }, [reset, fetchUserRelays, fetchUserProfile, fetchUserBadges]);
 
   const closeConnections = useCallback(() => {
-    if (userRelays.length > 0) {
-      pool.close(userRelays);
-    } else {
-      pool.close(DEFAULT_RELAYS);
+    try {
+      const relaysToClose = Array.from(activeRelaysRef.current);
+      if (relaysToClose.length > 0) {
+        console.log('Closing connections to relays:', relaysToClose);
+        pool.close(relaysToClose);
+        activeRelaysRef.current.clear();
+      }
+    } catch (e) {
+      console.error('Error closing connections:', e);
     }
-  }, [pool, userRelays]);
+  }, [pool]);
 
   useEffect(() => {
     return () => {

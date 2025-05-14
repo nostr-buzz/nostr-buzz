@@ -169,17 +169,6 @@ export function ProfilePage() {
           Back
         </Button>
       </div>
-
-      {/* Debug info - only show when in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-muted/30 p-2 text-xs mb-4 rounded-md">
-          <div><strong>Status:</strong> {loading || localLoading ? 'Loading...' : (error ? 'Error' : 'Ready')}</div>
-          {identifier && <div><strong>Identifier:</strong> {identifier}</div>}
-          {userProfile && <div><strong>Loaded Profile:</strong> {userProfile.name} ({userProfile.npub?.substring(0, 10)}...)</div>}
-          {error && <div className="text-red-500"><strong>Error:</strong> {error}</div>}
-        </div>
-      )}
-
       {/* Loading state */}
       {(loading || localLoading) && (
         <div className="flex flex-col items-center justify-center py-16">
@@ -190,7 +179,7 @@ export function ProfilePage() {
 
       {/* Error state */}
       {error && !loading && !localLoading && (
-        <Card className="w-full p-6 text-center">
+        <Card className="w-full p-6 text-center ">
           <CardContent className="pt-6">
             <div className="text-xl font-semibold mb-2">Error</div>
             <div className="text-red-500 mb-4">{error}</div>
@@ -295,7 +284,7 @@ export function ProfilePage() {
 
           {/* Client Links Sidebar */}
           <aside className="w-full md:w-1/3 lg:w-2/5">
-            <Card className="bg-card">
+            <Card className="bg-card py-0">
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-4">Open in Nostr client</h3>
                 
