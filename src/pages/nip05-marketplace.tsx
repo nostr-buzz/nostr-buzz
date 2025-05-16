@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { ArrowLeft, Search, Tag, Zap, CheckCircle, XCircle, LinkIcon, BadgeCheck, BoltIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useAppContext } from "@/App"; // Assuming AppContext is exported from App.tsx
+import { useAppContext } from "@/App"; 
 
-// Dummy data for marketplace items
+
 const initialIdentifiers = [
   { id: "1", name: "alice", domain: "nostr.buzz", priceSatoshis: 1000, available: true },
   { id: "2", name: "bob", domain: "nostr.buzz", priceSatoshis: 1500, available: true },
@@ -28,15 +28,15 @@ export function Nip05MarketplacePage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 100); // Simulate loading finish
+    }, 100); 
     return () => clearTimeout(timer);
   }, [setIsLoading]);
 
-  // Debounce search term for suggestions to avoid rapid UI updates
+  
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm.trim().toLowerCase());
-    }, 300); // Adjust debounce delay as needed
+    }, 300); 
 
     return () => {
       clearTimeout(handler);
@@ -50,22 +50,22 @@ export function Nip05MarketplacePage() {
   }, [searchTerm]);
 
   const handleBuyClick = (identifierName: string) => {
-    // Placeholder for buy logic
+    
     alert(`Attempting to buy ${identifierName}@nostr.buzz`);
-    // In a real app, this would initiate a payment flow (e.g., with WebLN)
+    
   };
 
   const isValidForSuggestion = (term: string) => {
-    // Basic validation: not empty and perhaps some character restrictions
+    
     return term.length > 0 && /^[a-z0-9_]+$/.test(term);
   };
 
   const currentSuggestedName = isValidForSuggestion(debouncedSearchTerm) ? debouncedSearchTerm : null;
 
-  // Handle back navigation
+  
   const handleBackToHome = () => {
     setIsLoading(true);
-    // Navigate to the home page (/) instead of using navigate(-1)
+    
     setTimeout(() => {
       navigate('/');
       setIsLoading(false);

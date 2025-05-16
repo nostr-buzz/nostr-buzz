@@ -10,13 +10,13 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
   theme: Theme;
-  systemTheme: "dark" | "light"; // Add systemTheme to track OS preference
+  systemTheme: "dark" | "light"; 
   setTheme: (theme: Theme) => void;
 };
 
 const initialState: ThemeProviderState = {
   theme: "system",
-  systemTheme: "light", // Default system theme
+  systemTheme: "light", 
   setTheme: () => null,
 };
 
@@ -32,7 +32,7 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
   
-  // Track the system theme preference
+  
   const [systemTheme, setSystemTheme] = React.useState<"dark" | "light">(
     window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   );
@@ -48,21 +48,21 @@ export function ThemeProvider({
         : "light";
       
       root.classList.add(systemTheme);
-      // Update the detected system theme
+      
       setSystemTheme(systemTheme);
     } else {
       root.classList.add(theme);
     }
   }, [theme]);
 
-  // Listen for system theme preference changes
+  
   React.useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     
     const handleChange = (e: MediaQueryListEvent) => {
       setSystemTheme(e.matches ? "dark" : "light");
       
-      // If using system theme, also update the document class
+      
       if (theme === "system") {
         const root = window.document.documentElement;
         root.classList.remove("light", "dark");
@@ -77,7 +77,7 @@ export function ThemeProvider({
   const value = React.useMemo(
     () => ({
       theme,
-      systemTheme, // Include the detected system theme
+      systemTheme, 
       setTheme: (theme: Theme) => {
         localStorage.setItem(storageKey, theme);
         setTheme(theme);

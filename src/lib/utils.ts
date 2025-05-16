@@ -8,12 +8,12 @@ export function cn(...inputs: ClassValue[]) {
 export function getInitials(name: string): string {
   if (!name) return '??';
   
-  // For npub, just take first 2 characters after 'npub'
+  
   if (name.startsWith('npub')) {
     return name.slice(4, 6).toUpperCase();
   }
   
-  // For regular names, get initials
+  
   const words = name.split(' ');
   if (words.length === 1) {
     return name.substring(0, 2).toUpperCase();

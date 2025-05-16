@@ -1,27 +1,27 @@
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ThemeToggle } from "@/components/theme-toggle";
-import logoDark from "/logo-b.png"; // Import dark theme logo
-import logoLight from "/logo-w.png"; // Import light theme logo
+import logoDark from "/logo-b.png"; 
+import logoLight from "/logo-w.png"; 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { ProfilePage } from "@/components/profile-page";
+import { ProfilePage } from "@/pages/profile-page";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, createContext, useContext, useEffect, type FormEvent } from "react";
 import { GlobalSpinner } from "@/components/global-spinner";
-import { StandaloneNip05Button } from "@/components/standalone-nip05-button"; // Import the standalone button
-import { Nip05MarketplacePage } from "@/pages/nip05-marketplace-page"; // Import the new page
-import { EcosystemDirectoryPage } from "@/pages/ecosystem-directory-page"; // Import Ecosystem page
-import { WalletPage } from "@/pages/wallet-page"; // Import Wallet page
-import { EcosystemItemPage } from "@/pages/ecosystem-item-page"; // Import Ecosystem Item page
-import { Compass, Wallet as WalletIcon } from "lucide-react"; // Import icons for buttons
-import { NostrProvider } from "@/context/NostrContext"; // Import NostrProvider
+import { StandaloneNip05Button } from "@/components/standalone-nip05-button"; 
+import { Nip05MarketplacePage } from "@/pages/nip05-marketplace"; 
+import { EcosystemDirectoryPage } from "@/pages/ecosystem-directory"; 
+import { WalletPage } from "@/pages/wallet"; 
+import { EcosystemItemPage } from "@/pages/ecosystem-item"; 
+import { Compass } from "lucide-react"; 
+import { NostrProvider } from "@/context/NostrContext"; 
 import { useTheme } from "@/hooks/use-theme";
 import React from "react";
 import { StandaloneWalletButton } from "./components/standalone-wallet-button";
 
-// Create a context for loading state
+
 interface AppContextType {
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,7 +40,7 @@ export const useAppContext = () => {
 const pageVariants = {
   initial: {
     opacity: 0,
-    x: "-5vw", // Slide in from left
+    x: "-5vw", 
   },
   in: {
     opacity: 1,
@@ -48,7 +48,7 @@ const pageVariants = {
   },
   out: {
     opacity: 0,
-    x: "5vw", // Slide out to right
+    x: "5vw", 
   },
 };
 
@@ -63,38 +63,38 @@ function SearchPage() {
   const { setIsLoading } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchError, setSearchError] = useState<string | null>(null);
-  const { theme, effectiveTheme } = useTheme(); // Replace resolvedTheme with effectiveTheme
+  const { theme, effectiveTheme } = useTheme(); 
   
-  // Determine which logo to use based on theme and system preference
+  
   const logoToUse = React.useMemo(() => {
-    // If theme is explicitly set to dark or light, use that
+    
     if (theme === "dark") return logoLight;
     if (theme === "light") return logoDark;
     
-    // If theme is system, use the effective theme
+    
     return effectiveTheme === "dark" ? logoLight : logoDark;
-  }, [theme, effectiveTheme]); // Update dependency array
+  }, [theme, effectiveTheme]); 
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     setSearchError(null);
 
-    // Check if input is provided
+    
     if (!searchQuery.trim()) {
       return;
     }
 
     const query = searchQuery.trim();
     
-    // Validate if input is npub or hex key
+    
     if (query.startsWith("npub1") || /^[0-9a-f]{64}$/.test(query)) {
       console.log(`Navigating to profile with identifier: ${query}`);
       setIsLoading(true);
       navigate(`/profile/${query}`);
     } else {
-      // Show error message for invalid format
+      
       setSearchError("Please enter a valid Nostr public key (npub) or hex key");
-      setTimeout(() => setSearchError(null), 4000); // Clear error after 4 seconds
+      setTimeout(() => setSearchError(null), 4000); 
     }
   };
 
@@ -119,11 +119,10 @@ function SearchPage() {
       transition={pageTransition}
       className="flex flex-col items-center w-full max-w-xl"
     >
-      {/* Theme-aware logo using the determined logo */}
       <img
         src={logoToUse}
         alt="NOSTR BUZZ"
-        className="h-32 w-auto mb-8"
+        className="h-52 w-auto mb-8"
       />
 
       <form
@@ -143,14 +142,12 @@ function SearchPage() {
           />
         </div>
 
-        {/* Error message */}
         {searchError && (
           <div className="text-sm text-red-500 font-medium text-center mt-1">
             {searchError}
           </div>
         )}
 
-        {/* Example text */}
         <div className="text-xs text-muted-foreground text-center">
           Example: npub1z13g38a6qypp6py2z07shggg45cu8qex992xpss7d8zr128mu52s4cjajh
         </div>
@@ -164,7 +161,6 @@ function SearchPage() {
           <Compass className="h-4 w-4 mr-2" />
           Ecosystem
         </Button>
-
       </div>
     </motion.div>
   );
@@ -180,7 +176,6 @@ function App() {
         <NostrProvider>
           {isLoading && <GlobalSpinner />}
           <div className="relative flex flex-col items-center justify-center min-h-svh p-4 bg-background text-foreground overflow-x-hidden">
-            {/* Container for top-right buttons */}
             <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
               <StandaloneNip05Button /> 
               <StandaloneWalletButton /> 

@@ -4,8 +4,8 @@ export interface EcosystemItem {
   name: string;
   shortDescription: string;
   longDescription: string;
-  imageUrl?: string; // Placeholder, e.g., '/img/ecosystem/damus.png'
-  imagePlaceholderColor?: string; // e.g., 'bg-blue-500'
+  imageUrl?: string; 
+  imagePlaceholderColor?: string; 
   platforms: string[];
   websiteUrl?: string;
   tags?: string[];
@@ -16,18 +16,18 @@ export interface EcosystemCategory {
   slug: string;
   name: string;
   description: string;
-  icon: React.ReactNode; // We'll pass Lucide icons here
+  icon: React.ReactNode; 
   items: EcosystemItem[];
 }
 
-// Example Data (expand this significantly for a real directory)
+
 export const ecosystemCategories: EcosystemCategory[] = [
   {
     id: "clients",
     slug: "clients",
     name: "Clients",
     description: "Applications to interact with the Nostr network.",
-    icon: "Users", // Icon name from lucide-react, will be resolved in component
+    icon: "Users", 
     items: [
       {
         id: "damus",
@@ -95,10 +95,10 @@ export const ecosystemCategories: EcosystemCategory[] = [
       },
     ],
   },
-  // Add more categories like "Relays", "Guides", "Hardware", etc.
+  
 ];
 
-// Helper function to get a specific item
+
 export const getEcosystemItem = (categorySlug: string, itemSlug: string): EcosystemItem | undefined => {
   const category = ecosystemCategories.find(cat => cat.slug === categorySlug);
   return category?.items.find(item => item.slug === itemSlug);

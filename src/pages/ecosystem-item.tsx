@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ExternalLink, Tag, Layers, Globe } from "lucide-react";
-import { useNavigate, useParams, Link as RouterLink } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useAppContext } from "@/App";
 import { getEcosystemItem, getEcosystemCategory } from "@/lib/ecosystem-data";
@@ -17,12 +17,12 @@ export function EcosystemItemPage() {
 
   useEffect(() => {
     if (!item) {
-      // Handle item not found, maybe navigate to 404 or back
-      // For now, just log and stop loading
+      
+      
       console.error("Ecosystem item not found:", categorySlug, itemSlug);
       setIsLoading(false);
-      // Consider navigating to a 404 page or back to the directory
-      // navigate("/ecosystem", { replace: true }); 
+      
+      
     } else {
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -32,7 +32,7 @@ export function EcosystemItemPage() {
   }, [item, categorySlug, itemSlug, setIsLoading, navigate]);
 
   if (!item || !category) {
-    // Could show a more specific "Item not found" message or a spinner if still loading
+    
     return (
         <div className="w-full max-w-3xl mx-auto p-4 md:p-6 text-center">
             <p className="text-muted-foreground">Item not found or loading...</p>
@@ -52,7 +52,7 @@ export function EcosystemItemPage() {
           className="text-muted-foreground hover:text-foreground mr-4"
           onClick={() => {
             setIsLoading(true);
-            // Navigate back to the specific category or main directory
+            
             setTimeout(() => navigate(categorySlug ? `/ecosystem#${categorySlug}` : "/ecosystem"), 300);
           }}
         >

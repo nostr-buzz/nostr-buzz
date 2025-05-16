@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
   ArrowLeft, Wallet, Send, Download, History, Bitcoin, QrCode, ScanLine, Copy, Check, ExternalLink
 } from "lucide-react";
@@ -29,14 +29,14 @@ import {
 import { Html5Qrcode } from "html5-qrcode";
 import { Html5QrcodeScannerState, type Html5QrcodeResult } from "html5-qrcode";
 
-// Dummy data for transactions
+
 const dummyTransactions = [
   { id: "1", type: "received", amount: 50000, currency: "sats", date: "2023-10-26", description: "From @user123", status: "confirmed" },
   { id: "2", type: "sent", amount: 25000, currency: "sats", date: "2023-10-25", description: "To @shopxyz", status: "confirmed" },
   { id: "3", type: "received", amount: 100000, currency: "sats", date: "2023-10-24", description: "Zap from post", status: "pending" },
 ];
 
-// Dummy address for receiving
+
 const DUMMY_LN_ADDRESS = "nostrbuzz@getalby.com";
 const DUMMY_BTC_ADDRESS = "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 

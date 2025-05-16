@@ -7,8 +7,8 @@ import { useEffect, useState, useRef } from "react";
 import { useAppContext } from "@/App";
 import { useNostr } from "@/context/NostrContext";
 import { getInitials } from "@/lib/utils";
+import { ZapDialog } from "@/components/zap-dialog";
 
-// Define client list similar to the Angular NOSTR_CLIENTS model
 const nostrClients = [
   { 
     name: "Primal", 
@@ -69,32 +69,36 @@ export function ProfilePage() {
   const [localLoading, setLocalLoading] = useState(false);
   const lookupCompleted = useRef(false);
 
-  // Get preferred client from localStorage on initial load
+  useEffect(() => {
+    if (userProfile) {
+      console.log("Loaded user profile:", userProfile);
+      console.log("Lightning address (lud16):", userProfile.lud16);
+      console.log("Lightning address (lud06):", userProfile.lud06);
+    }
+  }, [userProfile]);
+
   useEffect(() => {
     const savedClient = localStorage.getItem('preferredNostrClient');
     if (savedClient) {
       setPreferredClient(savedClient);
     } else {
-      // Default to Primal if no preference is set
       setPreferredClient('Primal');
     }
   }, []);
 
-  // Save preferred client to localStorage when it changes
   const updatePreferredClient = (clientName: string) => {
     setPreferredClient(clientName);
     localStorage.setItem('preferredNostrClient', clientName);
   };
 
-  // Fetch profile on component mount or when identifier changes
   useEffect(() => {
     console.log("ProfilePage: identifier param =", identifier);
     
-    // Reset lookup completed flag when identifier changes
+    
     lookupCompleted.current = false;
     
     const fetchProfile = async () => {
-      // If we're on the /profile route without an identifier, redirect to home
+      
       if (!identifier) {
         console.log("No identifier provided, redirecting to home");
         setIsLoading(true);
@@ -102,7 +106,7 @@ export function ProfilePage() {
         return;
       }
       
-      // Don't fetch again if we've already completed a lookup for this identifier
+      
       if (lookupCompleted.current) {
         console.log("Lookup already completed for this identifier, skipping");
         return;
@@ -115,7 +119,7 @@ export function ProfilePage() {
         console.log("Looking up profile for:", identifier);
         await lookupUser(identifier);
         
-        // Mark lookup as completed to prevent duplicate calls
+        
         lookupCompleted.current = true;
       } catch (err) {
         console.error("Error in fetchProfile:", err);
@@ -127,17 +131,17 @@ export function ProfilePage() {
 
     fetchProfile();
     
-    // Cleanup function
+    
     return () => {
       setIsLoading(false);
     };
   }, [identifier, lookupUser, setIsLoading, navigate]);
 
-  // Helper function to get image URL with fallback
+  
   const getImageUrl = (url: string | undefined, type: 'avatar' | 'banner' = 'avatar') => {
     if (!url) return type === 'avatar' ? '/default-avatar.png' : '/default-banner.svg';
     
-    // Check if URL is valid
+    
     try {
       new URL(url);
       return url;
@@ -146,7 +150,7 @@ export function ProfilePage() {
     }
   };
 
-  // Function to generate client URL with profile
+  
   const getClientUrl = (client: typeof nostrClients[0]): string => {
     if (!userProfile?.npub) return '#';
     return client.url.replace('{npub}', userProfile.npub);
@@ -251,13 +255,19 @@ export function ProfilePage() {
                     >
                       <Globe className="h-4 w-4 mr-2" />
                       Website
-                    </Button>
-                  )}
-                  {userProfile.lud16 && (
-                    <Button variant="outline" size="sm">
-                      <Zap className="h-4 w-4 mr-2 text-yellow-500" />
-                      {userProfile.lud16}
-                    </Button>
+                    </Button>                  )}                 
+                   {userProfile.lud16 && (
+                    <ZapDialog
+                      recipientPubkey={userProfile.pubkey}
+                      recipientNpub={userProfile.npub}
+                      lud16={userProfile.lud16}
+                      trigger={
+                        <Button variant="outline" size="sm">
+                          <Zap className="h-4 w-4 mr-2 text-yellow-500" />
+                          Zap {userProfile.name || "User"}
+                        </Button>
+                      }
+                    />
                   )}
                 </div>
 

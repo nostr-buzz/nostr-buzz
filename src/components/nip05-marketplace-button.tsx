@@ -6,18 +6,18 @@ import { useAppContext } from "@/App";
 export function Nip05MarketplaceButton() {
   const navigate = useNavigate();
   
-  // Conditionally use context with try-catch to prevent errors
+  
   let setIsLoading: React.Dispatch<React.SetStateAction<boolean>> | undefined;
   try {
     const context = useAppContext();
     setIsLoading = context.setIsLoading;
   } catch (error) {
-    // Context not available, handle gracefully
+    
     console.log("AppContext not available yet");
   }
 
   const handleClick = () => {
-    // Only use setIsLoading if it's available
+    
     if (setIsLoading) {
       setIsLoading(true);
     }
