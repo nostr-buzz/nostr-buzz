@@ -11,10 +11,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, createContext, useContext, useEffect, type FormEvent } from "react";
 import { GlobalSpinner } from "@/components/global-spinner";
 import { StandaloneNip05Button } from "@/components/standalone-nip05-button"; // Import the standalone button
-import { Nip05MarketplacePage } from "@/components/nip05-marketplace-page"; // Import the new page
-import { EcosystemDirectoryPage } from "@/components/ecosystem-directory-page"; // Import Ecosystem page
-import { WalletPage } from "@/components/wallet-page"; // Import Wallet page
-import { EcosystemItemPage } from "@/components/ecosystem-item-page"; // Import Ecosystem Item page
+import { Nip05MarketplacePage } from "@/pages/nip05-marketplace-page"; // Import the new page
+import { EcosystemDirectoryPage } from "@/pages/ecosystem-directory-page"; // Import Ecosystem page
+import { WalletPage } from "@/pages/wallet-page"; // Import Wallet page
+import { EcosystemItemPage } from "@/pages/ecosystem-item-page"; // Import Ecosystem Item page
 import { Compass, Wallet as WalletIcon } from "lucide-react"; // Import icons for buttons
 import { NostrProvider } from "@/context/NostrContext"; // Import NostrProvider
 import { useTheme } from "@/hooks/use-theme";
