@@ -23,7 +23,6 @@ const DEFAULT_RELAYS = [
 ];
 
 // Timeout values in milliseconds
-const CONNECTION_TIMEOUT = 3000;
 const FETCH_TIMEOUT = 4000;
 
 export function NostrProvider({ children }: { children: React.ReactNode }) {
