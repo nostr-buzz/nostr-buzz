@@ -1,6 +1,3 @@
-// This is a simplified version of the toast component for use in our application
-
-import { useState } from "react";
 
 type ToastType = "default" | "success" | "error" | "warning";
 

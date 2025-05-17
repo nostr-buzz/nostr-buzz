@@ -128,29 +128,34 @@ function SearchPage() {
       <img
         src={logoToUse}
         alt="NOSTR BUZZ"
-        className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto mb-6 sm:mb-8 md:mb-10"
+        className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto mb-8 sm:mb-10 md:mb-12 transform hover:scale-105 transition-transform duration-300"
       />
+      
       <form
-        className="w-full flex flex-col space-y-3 max-w-md sm:max-w-lg md:max-w-xl mx-auto"
+        className="w-full flex flex-col space-y-4 max-w-md sm:max-w-lg md:max-w-xl mx-auto"
         onSubmit={handleSearch}
       >
-        <div className="flex items-center rounded-md border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 md:p-2 shadow-md">
-          <div className="pl-3 pr-1 md:pl-4">
-            <Search className="size-4 sm:size-5 md:size-6 text-muted-foreground" />
-          </div>          <Input
+        <div className="flex items-center rounded-xl border-2 border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-2 md:p-3 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="pl-3 pr-2 md:pl-4">
+            <Search className="size-5 sm:size-6 md:size-7 text-primary" />
+          </div>
+          
+          <Input
             type="search"
             placeholder="Search Nostr: profiles, notes, events..."
-            className="flex-grow h-9 sm:h-10 md:h-12 px-0 py-1 sm:py-2 text-sm sm:text-base md:text-lg bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 placeholder:text-sm md:placeholder:text-base"
+            className="flex-grow h-10 sm:h-12 md:h-14 px-2 py-2 sm:py-3 text-base sm:text-lg md:text-xl bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        
         {searchError && (
           <div className="text-sm text-red-500 font-medium text-center mt-1 animate-pulse">
             {searchError}
           </div>
-        )}{" "}
-        <div className="text-xs md:text-sm text-muted-foreground text-center mt-0 mb-2 px-4">
+        )}
+        
+        <div className="text-sm md:text-base text-muted-foreground text-center mt-1 mb-3 px-4">
           <span className="hidden sm:inline">
             Search for anything in Nostr: profiles, keywords, events, or enter an npub/note ID
           </span>
@@ -158,25 +163,43 @@ function SearchPage() {
             Search profiles, notes, or events
           </span>
         </div>
-      </form>{" "}      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap justify-center gap-3 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto">
+      </form>
+      
+      <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 md:flex justify-center gap-4 md:gap-6 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto">
         <Button
           type="submit"
-          size="default"
+          size="lg"
           onClick={handleSearch}
-          className="w-full sm:w-auto md:px-6 md:text-lg"
+          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-xl transform hover:translate-y-[-2px] transition-all duration-300 "
         >
-          <Search className="h-4 w-4 mr-2 flex-shrink-0" />
+          <Search className="h-5 w-5 mr-3 flex-shrink-0" />
           Search Nostr
         </Button>
+        
         <Button
           variant="secondary"
-          size="default"
+          size="lg"
           onClick={() => handleNavigation("/ecosystem")}
-          className="w-full sm:w-auto md:px-6 md:text-lg"
+          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-xl transform hover:translate-y-[-2px] transition-all duration-300 bg-gradient-to-r from-zinc-200 to-zinc-300 hover:from-zinc-300 hover:to-zinc-400 dark:from-zinc-800 dark:to-zinc-700 dark:hover:from-zinc-700 dark:hover:to-zinc-600"
         >
-          <Compass className="h-4 w-4 mr-2 flex-shrink-0" />
+          <Compass className="h-5 w-5 mr-3 flex-shrink-0" />
           Explore Ecosystem
         </Button>
+        
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => handleNavigation("/join-nostr")}
+          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-lg border-2 transform hover:translate-y-[-2px] transition-all duration-300 text-purple-600 border-purple-300 hover:bg-purple-50 hover:text-purple-700 dark:text-purple-400 dark:border-purple-900 dark:hover:bg-purple-950/50"
+        >
+          <UserPlus className="h-5 w-5 mr-3 flex-shrink-0" />
+          Join Nostr
+        </Button>
+      </div>
+      
+      <div className="mt-10 sm:mt-12 md:mt-16 text-center text-sm sm:text-base text-muted-foreground">
+        <p className="mb-2 font-semibold">The #1 Gateway to Nostr</p>
+        <p>Explore the decentralized social network with powerful search</p>
       </div>
     </motion.div>
   );

@@ -9,8 +9,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import ReactMarkdown from 'react-markdown';
 import { nip19, type Event, SimplePool } from 'nostr-tools';
-import { useNostr } from '@/context/NostrContext'; // Import NostrContext to use existing pool
-
+ 
 // Page animation variants
 const pageVariants = {
   initial: {
@@ -136,8 +135,7 @@ export default function EventViewer() {
   const [copied, setCopied] = useState(false);
   const [authorLoading, setAuthorLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const { closeConnections } = useNostr();
-  
+   
   // Check if event was passed via navigation state
   const passedEvent = location.state?.event as Event | undefined;
   const passedRelayUrl = location.state?.relayUrl as string | undefined;
