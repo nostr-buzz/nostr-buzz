@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom'; // Add useLocation
 import { useAppContext } from '@/App';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Check } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import ReactMarkdown from 'react-markdown';
 import { nip19, type Event, SimplePool } from 'nostr-tools';
+import { useNostr } from '@/context/NostrContext'; // Import NostrContext to use existing pool
 
 // Page animation variants
 const pageVariants = {
@@ -44,21 +45,126 @@ const formatDate = (timestamp: number): string => {
   }).format(date);
 };
 
-// Define and export the component - using default export to avoid previous issues
+// Define a comprehensive list of relays for better event discovery
+const NOSTR_RELAYS = [
+  'wss://relay.nostr.band',
+  'wss://relay.damus.io',
+  'wss://purplepag.es',
+  'wss://relay.primal.net',
+  'wss://nos.lol',
+  'wss://nostr.wine',
+  'wss://relay.snort.social',
+  'wss://relay.current.fyi',
+  'wss://relay.nostr.bg',
+  'wss://eden.nostr.land'
+];
+
+// Define and export the component
 export default function EventViewer() {
   const { identifier } = useParams<{ identifier: string }>();
   const { setIsLoading } = useAppContext();
+  const location = useLocation(); // Get location to access state
   const [event, setEvent] = useState<Event | null>(null);
   const [author, setAuthor] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+  const { closeConnections } = useNostr();
   
-  // Since the NostrContext doesn't expose the pool, we'll create our own pool
+  // Check if event was passed via navigation state
+  const passedEvent = location.state?.event as Event | undefined;
+  const passedRelayUrl = location.state?.relayUrl as string | undefined;
+  
+  // Create a pool for Nostr relay connections
   const [pool] = useState(() => new SimplePool());
   
   useEffect(() => {
+    // Function to fetch author data
+    const fetchAuthorProfile = async (pubkey: string, knownRelays: string[] = []) => {
+      console.log('Fetching author profile for pubkey:', pubkey);
+      
+      try {
+        const relaysToTry = [...new Set([...(knownRelays || []), ...NOSTR_RELAYS])];
+        console.log('Looking for author profile on relays:', relaysToTry);
+        
+        // Try to find author profile with multiple attempts
+        let attempts = 0;
+        let authorEvent = null;
+        
+        while (!authorEvent && attempts < 3) {
+          attempts++;
+          console.log(`Attempt ${attempts}/3 to fetch author profile`);
+          
+          try {
+            const events = await pool.querySync(
+              relaysToTry,
+              { kinds: [0], authors: [pubkey], limit: 1 },
+              { maxWait: 3000 + (attempts * 1000) }
+            );
+            
+            if (events && events.length > 0) {
+              authorEvent = events[0];
+              break;
+            }
+            
+            // Try each relay individually as fallback
+            for (const relay of relaysToTry) {
+              try {
+                const singleRelayEvent = await pool.get(
+                  [relay],
+                  { kinds: [0], authors: [pubkey] }
+                );
+                
+                if (singleRelayEvent) {
+                  authorEvent = singleRelayEvent;
+                  break;
+                }
+              } catch (err) {
+                // Continue to next relay
+              }
+            }
+            
+            if (!authorEvent && attempts < 3) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          } catch (attemptErr) {
+            console.warn(`Error in author profile fetch attempt ${attempts}:`, attemptErr);
+          }
+        }
+        
+        if (authorEvent) {
+          try {
+            const profileData = JSON.parse(authorEvent.content);
+            setAuthor({
+              pubkey,
+              npub: nip19.npubEncode(pubkey),
+              ...profileData
+            });
+            console.log('Found author profile:', profileData);
+            return;
+          } catch (e) {
+            console.error('Failed to parse profile data', e);
+          }
+        }
+        
+        // If no profile found or error parsing, set default author info
+        setAuthor({
+          pubkey,
+          npub: nip19.npubEncode(pubkey),
+          name: 'Unknown User'
+        });
+      } catch (e) {
+        console.error('Error fetching author profile:', e);
+        setAuthor({
+          pubkey,
+          npub: nip19.npubEncode(pubkey),
+          name: 'Unknown User'
+        });
+      }
+    };
+    
+    // Main function to fetch event
     async function fetchEvent() {
       if (!identifier) return;
       
@@ -66,86 +172,128 @@ export default function EventViewer() {
       setIsLoading(true);
       setError(null);
       
+      // If we already have the event from navigation state, use it
+      if (passedEvent) {
+        console.log('Using event passed from previous page:', passedEvent);
+        setEvent(passedEvent);
+        fetchAuthorProfile(passedEvent.pubkey, passedRelayUrl ? [passedRelayUrl] : undefined);
+        setLoading(false);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         let eventId: string;
-        let relays = [
-          'wss://relay.nostr.band',
-          'wss://relay.damus.io',
-          'wss://purplepag.es',
-          'wss://relay.primal.net',
-          'wss://nostr-pub.wellorder.net',
-          'wss://nos.lol'
-        ];
+        let eventRelays: string[] = [];
         
-        console.log('Attempting to fetch event:', identifier);
+        console.log('Attempting to fetch event with identifier:', identifier);
         
-        // Decode note1/nevent1 if provided
-        if (identifier.startsWith('note1') || identifier.startsWith('nevent1')) {
-          const decoded = nip19.decode(identifier);
-          
-          if (decoded.type === 'note') {
-            eventId = decoded.data as string;
-          } else if (decoded.type === 'nevent') {
-            const data = decoded.data as { id: string, relays?: string[] };
-            eventId = data.id;
-            if (data.relays && data.relays.length > 0) {
-              relays = [...data.relays, ...relays];
+        // Handle different identifier formats
+        if (identifier.startsWith('note1')) {
+          try {
+            const decoded = nip19.decode(identifier);
+            if (decoded.type === 'note') {
+              eventId = decoded.data as string;
+              console.log('Decoded note1 to hex:', eventId);
+            } else {
+              throw new Error('Invalid note identifier');
             }
-          } else {
-            throw new Error('Invalid event identifier');
+          } catch (e) {
+            console.error('Failed to decode note1:', e);
+            throw new Error('Invalid note identifier format');
+          }
+        } else if (identifier.startsWith('nevent1')) {
+          try {
+            const decoded = nip19.decode(identifier);
+            if (decoded.type === 'nevent') {
+              const data = decoded.data as { id: string, relays?: string[] };
+              eventId = data.id;
+              console.log('Decoded nevent1 to hex:', eventId);
+              if (data.relays && data.relays.length > 0) {
+                eventRelays = data.relays;
+                console.log('Using relays from nevent1:', eventRelays);
+              }
+            } else {
+              throw new Error('Invalid nevent identifier');
+            }
+          } catch (e) {
+            console.error('Failed to decode nevent1:', e);
+            throw new Error('Invalid nevent identifier format');
           }
         } else if (/^[0-9a-f]{64}$/.test(identifier)) {
-          // If it's a hex event ID
+          // Direct hex event ID
           eventId = identifier;
+          console.log('Using hex event ID directly:', eventId);
         } else {
-          throw new Error('Invalid event identifier format');
+          throw new Error('Unsupported event identifier format');
         }
         
-        console.log(`Looking for event ID: ${eventId} on relays:`, relays);
+        // Combine specified relays with our defaults
+        const relaysToUse = [...new Set([...eventRelays, ...NOSTR_RELAYS])];
+        console.log(`Looking for event ID: ${eventId} on ${relaysToUse.length} relays`);
         
-        // Fetch the event using querySync which is more reliable
-        const events = await pool.querySync(relays, { ids: [eventId] }, { maxWait: 5000 });
+        // Strategy 1: Try to fetch directly from specific relays first
+        const specificRelays = [
+          'wss://relay.nostr.band',
+          'wss://relay.damus.io',
+          'wss://nos.lol',
+          'wss://nostr.wine'
+        ];
         
-        if (!events || events.length === 0) {
-          console.error('No events found for ID:', eventId);
-          throw new Error('Event not found');
-        }
-        
-        const eventData = events[0];
-        console.log('Found event:', eventData);
-        setEvent(eventData);
-        
-        // Fetch the author profile using querySync
-        const authorEvents = await pool.querySync(relays, {
-          kinds: [0],
-          authors: [eventData.pubkey],
-          limit: 1
-        }, { maxWait: 3000 });
-        
-        if (authorEvents && authorEvents.length > 0) {
-          const authorEvent = authorEvents[0];
+        // Try specific relays first with increasing timeouts
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const timeout = 3000 + (attempt * 2000);
+          console.log(`Attempt ${attempt+1}/3 with timeout ${timeout}ms`);
+          
           try {
-            const profileData = JSON.parse(authorEvent.content);
-            setAuthor({
-              pubkey: eventData.pubkey,
-              npub: nip19.npubEncode(eventData.pubkey),
-              ...profileData
-            });
-          } catch (e) {
-            console.error('Failed to parse profile data', e);
-            setAuthor({
-              pubkey: eventData.pubkey,
-              npub: nip19.npubEncode(eventData.pubkey),
-              name: 'Unknown User'
-            });
+            // Try querySync with a subset of relays
+            const events = await pool.querySync(
+              specificRelays,
+              { ids: [eventId] },
+              { maxWait: timeout }
+            );
+            
+            if (events && events.length > 0) {
+              console.log('Found event on specific relays:', events[0]);
+              setEvent(events[0]);
+              fetchAuthorProfile(events[0].pubkey, specificRelays);
+              return;
+            }
+          } catch (err) {
+            console.warn('Error querying specific relays:', err);
           }
-        } else {
-          setAuthor({
-            pubkey: eventData.pubkey,
-            npub: nip19.npubEncode(eventData.pubkey),
-            name: 'Unknown User'
-          });
+          
+          // Try individual relays as fallback
+          for (const relay of relaysToUse) {
+            try {
+              console.log(`Checking relay: ${relay}`);
+              const event = await pool.get(
+                [relay],
+                { ids: [eventId] }
+              );
+              
+              if (event) {
+                console.log(`Found event on relay: ${relay}`, event);
+                setEvent(event);
+                fetchAuthorProfile(event.pubkey, [relay]);
+                return;
+              }
+            } catch (relayError) {
+              console.warn(`Error with relay ${relay}:`, relayError);
+              // Continue to next relay
+            }
+          }
+          
+          if (attempt < 2) {
+            console.log(`Waiting before next attempt...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
+        
+        // If we reach here, we couldn't find the event
+        console.error('Event not found after all attempts');
+        throw new Error('Event not found. It might have been deleted or is not available on connected relays.');
+        
       } catch (e) {
         console.error('Error fetching event:', e);
         setError((e as Error).message);
@@ -159,17 +307,9 @@ export default function EventViewer() {
     
     return () => {
       // Clean up connections when component unmounts
-      const relays = [
-        'wss://relay.nostr.band',
-        'wss://relay.damus.io',
-        'wss://purplepag.es',
-        'wss://relay.primal.net',
-        'wss://nostr-pub.wellorder.net',
-        'wss://nos.lol'
-      ];
-      pool.close(relays);
+      pool.close(NOSTR_RELAYS);
     };
-  }, [identifier, pool, setIsLoading]);
+  }, [identifier, pool, setIsLoading, passedEvent, passedRelayUrl]);
   
   const goBack = () => {
     navigate(-1);

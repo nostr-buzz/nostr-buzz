@@ -139,9 +139,12 @@ const NoteCard = ({ event, relayUrl }: { event: Event, relayUrl: string }) => {
       pool.close([relayUrl, 'wss://relay.nostr.band', 'wss://relay.damus.io']);
     };
   }, [event.pubkey, relayUrl, pool]);
-    const handleNoteClick = () => {
-    // Navigate to event detail view
-    navigate(`/event/${nip19.noteEncode(event.id)}`);
+  
+  const handleNoteClick = () => {
+    // Navigate to event detail view with the full event data in state
+    navigate(`/event/${nip19.noteEncode(event.id)}`, {
+      state: { event, relayUrl }
+    });
   };
   
   return (
@@ -198,8 +201,10 @@ const OtherEventCard = ({ event, relayUrl }: { event: Event, relayUrl: string })
   const eventTypeLabel = getEventTypeLabel(event.kind);
   
   const handleEventClick = () => {
-    // Navigate to event detail view, using the same method as NoteCard
-    navigate(`/event/${nip19.noteEncode(event.id)}`);
+    // Navigate to event detail view with the full event data in state
+    navigate(`/event/${nip19.noteEncode(event.id)}`, {
+      state: { event, relayUrl }
+    });
   };
   
   return (

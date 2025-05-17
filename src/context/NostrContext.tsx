@@ -150,7 +150,7 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
 
       let userMetadata = null;
 
-      const reliableRelays = ['wss://purplepag.es', 'wss://relay.primal.net'];
+      const reliableRelays = ['wss://purplepag.es', 'wss://relay.primal.net','wss://relay.nostr.band/'];
       userMetadata = await safeGetFromRelay(reliableRelays, {
         kinds: [0],
         authors: [pubkey],
@@ -167,7 +167,7 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!userMetadata) {
-        for (const relay of ['wss://relay.damus.io', 'wss://nostr-pub.wellorder.net']) {
+        for (const relay of ['wss://relay.nostr.band', 'wss://relay.primal.net', 'wss://relay.damus.io']) {
           userMetadata = await safeGetFromRelay([relay], {
             kinds: [0],
             authors: [pubkey],
