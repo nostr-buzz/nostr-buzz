@@ -4,7 +4,7 @@ import logoDark from "/logo-b.png";
 import logoLight from "/logo-w.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Zap } from "lucide-react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ProfilePage } from "@/pages/profile-page";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,9 @@ import { StandaloneWalletButton } from "./components/standalone-wallet-button";
 import { JoinNostrWizardPage } from "@/pages/join-nostr-wizard";
 import { SearchResultsPage } from "@/pages/search-results";
 import EventViewer from "@/pages/event-viewer"; // Import the new component with default export
+import { ZapGatewayPage } from "@/pages/zap-gateway";
+import { ZapHandlerPage } from "@/pages/zap-handler";
+import { StandaloneZapGatewayButton } from "@/components/standalone-zap-gateway-button";
 
 interface AppContextType {
   isLoading: boolean;
@@ -185,16 +188,17 @@ function SearchPage() {
           <Compass className="h-5 w-5 mr-3 flex-shrink-0" />
           Explore Ecosystem
         </Button>
-        
+
         <Button
           variant="outline"
           size="lg"
-          onClick={() => handleNavigation("/join-nostr")}
-          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-lg border-2 transform hover:translate-y-[-2px] transition-all duration-300 text-purple-600 border-purple-300 hover:bg-purple-50 hover:text-purple-700 dark:text-purple-400 dark:border-purple-900 dark:hover:bg-purple-950/50"
+          onClick={() => handleNavigation("/zap-gateway")}
+          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-lg border-2 transform hover:translate-y-[-2px] transition-all duration-300 text-yellow-600 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 dark:text-yellow-400 dark:border-yellow-900 dark:hover:bg-yellow-950/50"
         >
-          <UserPlus className="h-5 w-5 mr-3 flex-shrink-0" />
-          Join Nostr
+          <Zap className="h-5 w-5 mr-3 flex-shrink-0" />
+          Buzz Zap Gateway
         </Button>
+        
       </div>
       
       <div className="mt-10 sm:mt-12 md:mt-16 text-center text-sm sm:text-base text-muted-foreground">
@@ -234,6 +238,7 @@ function App() {
               >
                 <UserPlus className="h-5 w-5" />
               </Button>
+              <StandaloneZapGatewayButton />
               <StandaloneNip05Button />
               <StandaloneWalletButton />
               <ThemeToggle />
@@ -249,6 +254,7 @@ function App() {
                 <UserPlus className="h-4 w-4 mr-1" />
                 Join Nostr
               </Button>
+              <StandaloneZapGatewayButton />
               <StandaloneNip05Button />
               <StandaloneWalletButton />
               <ThemeToggle />
@@ -263,6 +269,37 @@ function App() {
                   <Route
                     path="/event/:identifier"
                     element={<EventViewer />}
+                  />
+                  {/* Zap Gateway Routes */}
+                  <Route
+                    path="/zap-gateway"
+                    element={
+                      <motion.div
+                        initial="initial"
+                        animate="in"
+                        exit="out"
+                        variants={pageVariants}
+                        transition={pageTransition}
+                        className="w-full"
+                      >
+                        <ZapGatewayPage />
+                      </motion.div>
+                    }
+                  />
+                  <Route
+                    path="/zap/:pubkey"
+                    element={
+                      <motion.div
+                        initial="initial"
+                        animate="in"
+                        exit="out"
+                        variants={pageVariants}
+                        transition={pageTransition}
+                        className="w-full"
+                      >
+                        <ZapHandlerPage />
+                      </motion.div>
+                    }
                   />
                   <Route
                     path="/profile"
