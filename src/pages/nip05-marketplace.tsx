@@ -63,14 +63,7 @@ export function Nip05MarketplacePage() {
   const currentSuggestedName = isValidForSuggestion(debouncedSearchTerm) ? debouncedSearchTerm : null;
 
   
-  const handleBackToHome = () => {
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      navigate('/');
-      setIsLoading(false);
-    }, 300);
-  };  return (
+  return (
     <div className="w-full max-w-5xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
       <header className="mb-6 sm:mt-6 lg:mt-6">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-2">

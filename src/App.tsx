@@ -27,6 +27,8 @@ import { useTheme } from "@/hooks/use-theme";
 import React from "react";
 import { StandaloneWalletButton } from "./components/standalone-wallet-button";
 import { JoinNostrWizardPage } from "@/pages/join-nostr-wizard";
+import { SearchResultsPage } from "@/pages/search-results";
+import { EventPage } from "@/pages/event-page";
 
 interface AppContextType {
   isLoading: boolean;
@@ -92,9 +94,14 @@ function SearchPage() {
       console.log(`Navigating to profile with identifier: ${query}`);
       setIsLoading(true);
       navigate(`/profile/${query}`);
+    } else if (query.startsWith("note1") || query.startsWith("nevent1")) {
+      console.log(`Navigating to event: ${query}`);
+      setIsLoading(true);
+      navigate(`/event/${query}`);
     } else {
-      setSearchError("Please enter a valid Nostr public key (npub) or hex key");
-      setTimeout(() => setSearchError(null), 4000);
+      console.log(`Searching for: ${query}`);
+      setIsLoading(true);
+      navigate(`/search/${encodeURIComponent(query)}`);
     }
   };
 
@@ -130,10 +137,9 @@ function SearchPage() {
         <div className="flex items-center rounded-md border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 md:p-2 shadow-md">
           <div className="pl-3 pr-1 md:pl-4">
             <Search className="size-4 sm:size-5 md:size-6 text-muted-foreground" />
-          </div>
-          <Input
+          </div>          <Input
             type="search"
-            placeholder="Enter a Nostr npub or hex key..."
+            placeholder="Search Nostr: profiles, notes, events..."
             className="flex-grow h-9 sm:h-10 md:h-12 px-0 py-1 sm:py-2 text-sm sm:text-base md:text-lg bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 placeholder:text-sm md:placeholder:text-base"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -146,15 +152,13 @@ function SearchPage() {
         )}{" "}
         <div className="text-xs md:text-sm text-muted-foreground text-center mt-0 mb-2 px-4">
           <span className="hidden sm:inline">
-            Example:
-            npub1z13g38a6qypp6py2z07shggg45cu8qex992xpss7d8zr128mu52s4cjajh
+            Search for anything in Nostr: profiles, keywords, events, or enter an npub/note ID
           </span>
           <span className="sm:hidden">
-            Enter a valid Nostr public key (npub)
+            Search profiles, notes, or events
           </span>
         </div>
-      </form>{" "}
-      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:flex sm:flex-wrap justify-center gap-3 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto">
+      </form>{" "}      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap justify-center gap-3 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto">
         <Button
           type="submit"
           size="default"
@@ -162,7 +166,7 @@ function SearchPage() {
           className="w-full sm:w-auto md:px-6 md:text-lg"
         >
           <Search className="h-4 w-4 mr-2 flex-shrink-0" />
-          Search Profile
+          Search Nostr
         </Button>
         <Button
           variant="secondary"
@@ -227,9 +231,16 @@ function App() {
               <ThemeToggle />
             </div>{" "}
             <div className="w-full pb-16 sm:pb-0 flex flex-col items-center justify-center">
-              <AnimatePresence mode="wait">
-                <Routes location={location} key={location.pathname}>
+              <AnimatePresence mode="wait">                <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<SearchPage />} />
+                  <Route
+                    path="/search/:query"
+                    element={<SearchResultsPage />}
+                  />
+                  <Route
+                    path="/event/:identifier"
+                    element={<EventPage />}
+                  />
                   <Route
                     path="/profile"
                     element={

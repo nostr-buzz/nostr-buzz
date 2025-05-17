@@ -27,7 +27,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Html5Qrcode } from "html5-qrcode";
-import { Html5QrcodeScannerState, type Html5QrcodeResult } from "html5-qrcode";
 
 
 const dummyTransactions = [
@@ -45,7 +44,6 @@ export function WalletPage() {
   const { setIsLoading } = useAppContext();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("wallet");
-  const [showQR, setShowQR] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState<string>("");
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
@@ -53,7 +51,7 @@ export function WalletPage() {
   const [sendAddress, setSendAddress] = useState("");
   const [sendAmount, setSendAmount] = useState("");
   const [sendNote, setSendNote] = useState("");
-  const [advancedSend, setAdvancedSend] = useState(false);
+  const [] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {

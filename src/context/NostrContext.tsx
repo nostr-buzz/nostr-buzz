@@ -1,13 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { SimplePool, type Event, nip19 } from 'nostr-tools';
+import type { Filter } from 'nostr-tools';
+
+type SearchResult = {
+  type: 'profile' | 'note' | 'event' | 'other';
+  event: Event;
+  relayUrl: string;
+};
 
 type NostrContextType = {
   userProfile: any | null;
   userEvents: Event[];
   userBadges: Event[];
+  searchResults: SearchResult[];
   loading: boolean;
   error: string | null;
   lookupUser: (identifier: string) => Promise<void>;
+  searchNostr: (query: string) => Promise<void>;
   closeConnections: () => void;
 };
 
@@ -30,6 +39,7 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [userEvents, setUserEvents] = useState<Event[]>([]);
   const [userBadges, setUserBadges] = useState<Event[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +53,6 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
       console.log('User relays updated:', userRelays);
     }
   }, [userRelays]);
-
   const reset = useCallback(() => {
     setUserProfile(null);
     setUserEvents([]);
@@ -51,6 +60,10 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
+  const resetSearch = useCallback(() => {
+    setSearchResults([]);
+    setError(null);
+  }, []);
   const safeGetFromRelay = useCallback(async (relays: string[], filter: any, timeoutMs = FETCH_TIMEOUT) => {
     try {
       const safeRelays = relays.slice(0, 3);
@@ -62,6 +75,28 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.warn('Error in safeGetFromRelay:', e);
       return null;
+    }
+  }, [pool]);  
+  const safeListFromRelay = useCallback(async (relays: string[], filter: Filter, timeoutMs = FETCH_TIMEOUT) => {
+    try {
+      const safeRelays = relays.slice(0, 3);
+      console.log(`Attempting to list from relays:`, safeRelays, 'with filter:', filter);
+      
+      const results: { event: Event, relayUrl: string }[] = [];
+      
+      const events = await pool.querySync(safeRelays, filter, { maxWait: timeoutMs });
+      
+      events.forEach(event => {
+        results.push({ 
+          event, 
+          relayUrl: safeRelays[0] 
+        });
+      });
+      
+      return results;
+    } catch (e) {
+      console.warn('Error in safeListFromRelay:', e);
+      return [];
     }
   }, [pool]);
 
@@ -256,6 +291,89 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, [reset, fetchUserRelays, fetchUserProfile, fetchUserBadges]);
+  // New function for searching Nostr using NIP-50
+  const searchNostr = useCallback(async (query: string) => {
+    resetSearch();
+    setLoading(true);
+    console.log('Searching Nostr for:', query);
+
+    try {
+      const searchRelays = [
+        'wss://relay.nostr.band',
+        'wss://relay.damus.io', 
+        'wss://purplepag.es',
+        'wss://relay.primal.net'
+      ];
+
+      // Search for profiles (kind 0)
+      const profileFilter: Filter = {
+        kinds: [0],
+        limit: 20,
+        search: query
+      };
+
+      // Search for notes (kind 1)
+      const noteFilter: Filter = {
+        kinds: [1],
+        limit: 30,
+        search: query
+      };
+
+      // Search for other event types
+      const eventFilter: Filter = {
+        kinds: [3, 4, 5, 6, 7, 8, 9, 30023],
+        limit: 20,
+        search: query
+      };
+
+      // Perform searches in parallel
+      const [profileResults, noteResults, eventResults] = await Promise.all([
+        safeListFromRelay(searchRelays, profileFilter, 5000),
+        safeListFromRelay(searchRelays, noteFilter, 5000),
+        safeListFromRelay(searchRelays, eventFilter, 5000)
+      ]);
+
+      console.log(`Search results: ${profileResults.length} profiles, ${noteResults.length} notes, ${eventResults.length} other events`);
+
+      // Process and combine results
+      const processedResults: SearchResult[] = [
+        ...profileResults.map(({ event, relayUrl }) => ({ 
+          type: 'profile' as const, 
+          event, 
+          relayUrl 
+        })),
+        ...noteResults.map(({ event, relayUrl }) => ({ 
+          type: 'note' as const, 
+          event, 
+          relayUrl 
+        })),
+        ...eventResults.map(({ event, relayUrl }) => {
+          // Categorize other event types
+          return { 
+            type: 'other' as const, 
+            event, 
+            relayUrl 
+          };
+        })
+      ];
+
+      // Deduplicate results based on event ID
+      const uniqueResults = processedResults.reduce((acc, current) => {
+        const isDuplicate = acc.some(item => item.event.id === current.event.id);
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        return acc;
+      }, [] as SearchResult[]);
+
+      setSearchResults(uniqueResults);
+    } catch (e) {
+      console.error('Error in searchNostr:', e);
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [resetSearch, safeListFromRelay]);
 
   const closeConnections = useCallback(() => {
     try {
@@ -275,16 +393,17 @@ export function NostrProvider({ children }: { children: React.ReactNode }) {
       closeConnections();
     };
   }, [closeConnections]);
-
   return (
     <NostrContext.Provider
       value={{
         userProfile,
         userEvents,
         userBadges,
+        searchResults,
         loading,
         error,
         lookupUser,
+        searchNostr,
         closeConnections
       }}
     >
