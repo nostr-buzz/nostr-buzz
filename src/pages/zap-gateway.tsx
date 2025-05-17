@@ -369,27 +369,161 @@ const json = await response.json();`, "code2")}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="response" className="space-y-4">
+
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Response Format (for API use)</CardTitle>
+                <CardTitle className="text-lg">Modal Integration</CardTitle>
+                <CardDescription>Embed the Zap Gateway directly in your website</CardDescription>
               </CardHeader>
               <CardContent>
+                <p className="mb-3">Add this script to your website to open the Buzz Zap Gateway in a modal without redirecting users away from your site:</p>
+                
+                <div className="relative mb-4">
+                  <div className="p-3 bg-muted rounded-md font-mono text-sm overflow-auto whitespace-pre">
+{`<script src="https://nostr.buzz/js/zap-modal.min.js" defer></script>
+
+<script>
+  function openZapModal(pubkey, options = {}) {
+    const defaultOptions = {
+      amount: 1000,              // millisats
+      method: 'lightning',       // 'lightning', 'cashu', or 'ark'
+      comment: '',               // optional comment
+      theme: 'dark',             // 'light' or 'dark'
+      title: 'Support via Zap', // modal title
+      position: 'center',       // 'center', 'bottom'
+      onSuccess: (data) => console.log('Payment successful:', data),
+      onClose: () => console.log('Modal closed')
+    };
+    
+    const mergedOptions = {...defaultOptions, ...options};
+    BuzzZapModal.open(pubkey, mergedOptions);
+  }
+</script>
+
+<!-- Example button -->
+<button onclick="openZapModal('npub1...', {amount: 5000, comment: 'Thanks for the content!'})">
+  Tip with Zap ⚡
+</button>`}
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="absolute top-2 right-2"
+                    onClick={() => handleCopy(`<script src="https://nostr.buzz/js/zap-modal.min.js" defer></script>
+
+<script>
+  function openZapModal(pubkey, options = {}) {
+    const defaultOptions = {
+      amount: 1000,              // millisats
+      method: 'lightning',       // 'lightning', 'cashu', or 'ark'
+      comment: '',               // optional comment
+      theme: 'dark',             // 'light' or 'dark'
+      title: 'Support via Zap', // modal title
+      position: 'center',       // 'center', 'bottom'
+      onSuccess: (data) => console.log('Payment successful:', data),
+      onClose: () => console.log('Modal closed')
+    };
+    
+    const mergedOptions = {...defaultOptions, ...options};
+    BuzzZapModal.open(pubkey, mergedOptions);
+  }
+</script>
+
+<!-- Example button -->
+<button onclick="openZapModal('npub1...', {amount: 5000, comment: 'Thanks for the content!'})">
+  Tip with Zap ⚡
+</button>`, "modal-script")}
+                  >
+                    {copied["modal-script"] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                <h4 className="font-medium mt-5 mb-2">Predefined Amount Buttons</h4>
+                <p className="mb-3">Create a set of predefined tip amount buttons:</p>
+                
+                <div className="relative mb-4">
+                  <div className="p-3 bg-muted rounded-md font-mono text-sm overflow-auto whitespace-pre">
+{`<div class="zap-buttons">
+  <button onclick="openZapModal('npub1...', {amount: 1000, comment: 'Coffee tip'})">☕ 1000 sats</button>
+  <button onclick="openZapModal('npub1...', {amount: 5000, comment: 'Thanks!'})">🙏 5000 sats</button>
+  <button onclick="openZapModal('npub1...', {amount: 21000, comment: 'Appreciate your work'})">🚀 21000 sats</button>
+</div>`}
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="absolute top-2 right-2"
+                    onClick={() => handleCopy(`<div class="zap-buttons">
+  <button onclick="openZapModal('npub1...', {amount: 1000, comment: 'Coffee tip'})">☕ 1000 sats</button>
+  <button onclick="openZapModal('npub1...', {amount: 5000, comment: 'Thanks!'})">🙏 5000 sats</button>
+  <button onclick="openZapModal('npub1...', {amount: 21000, comment: 'Appreciate your work'})">🚀 21000 sats</button>
+</div>`, "preset-buttons")}
+                  >
+                    {copied["preset-buttons"] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                <h4 className="font-medium mt-5 mb-2">Modal Customization</h4>
+                <p className="mb-3">The modal can be fully customized with your brand colors and styles:</p>
+                
+                <div className="relative mb-4">
+                  <div className="p-3 bg-muted rounded-md font-mono text-sm overflow-auto whitespace-pre">
+{`// Advanced customization example
+BuzzZapModal.config({
+  primaryColor: '#ff9500',       // Your brand color
+  logo: 'https://yourdomain.com/logo.png', // Your logo URL
+  containerClass: 'your-custom-class', // Add custom CSS class
+  defaultMethod: 'lightning',    // Default payment method
+  defaultTheme: 'dark',          // Default theme
+  i18n: {                        // Custom translations
+    title: 'Support me with sats',
+    payButton: 'Send zap',
+    // other text elements...
+  }
+});`}
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="absolute top-2 right-2"
+                    onClick={() => handleCopy(`// Advanced customization example
+BuzzZapModal.config({
+  primaryColor: '#ff9500',       // Your brand color
+  logo: 'https://yourdomain.com/logo.png', // Your logo URL
+  containerClass: 'your-custom-class', // Add custom CSS class
+  defaultMethod: 'lightning',    // Default payment method
+  defaultTheme: 'dark',          // Default theme
+  i18n: {                        // Custom translations
+    title: 'Support me with sats',
+    payButton: 'Send zap',
+    // other text elements...
+  }
+});`, "modal-custom")}
+                  >
+                    {copied["modal-custom"] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                <h4 className="font-medium mt-5 mb-2">Direct API Integration</h4>
+                <p>For more advanced use cases, you can use the modal with direct API integration:</p>
+                
                 <div className="relative">
                   <div className="p-3 bg-muted rounded-md font-mono text-sm overflow-auto whitespace-pre">
-{`{
-  "status": "ok",
-  "payment": {
-    "method": "cashu",
-    "token": "cashuAeyJwI...",
-    "expires": 60
-  },
-  "zap_event": {
-    "id": "event_id",
-    "kind": 9734,
-    "content": "..."
+{`// Example of programmatic usage with async handling
+async function handleDonation() {
+  try {
+    const result = await BuzzZapModal.openAsync('npub1...', {
+      amount: 5000,
+      method: 'lightning'
+    });
+    
+    if (result.status === 'success') {
+      // Handle successful payment
+      console.log('Payment ID:', result.paymentId);
+      updateUserInterface();
+    }
+  } catch (error) {
+    console.error('Payment failed or was cancelled');
   }
 }`}
                   </div>
@@ -397,51 +531,35 @@ const json = await response.json();`, "code2")}
                     size="sm" 
                     variant="ghost" 
                     className="absolute top-2 right-2"
-                    onClick={() => handleCopy(`{
-  "status": "ok",
-  "payment": {
-    "method": "cashu",
-    "token": "cashuAeyJwI...",
-    "expires": 60
-  },
-  "zap_event": {
-    "id": "event_id",
-    "kind": 9734,
-    "content": "..."
+                    onClick={() => handleCopy(`// Example of programmatic usage with async handling
+async function handleDonation() {
+  try {
+    const result = await BuzzZapModal.openAsync('npub1...', {
+      amount: 5000,
+      method: 'lightning'
+    });
+    
+    if (result.status === 'success') {
+      // Handle successful payment
+      console.log('Payment ID:', result.paymentId);
+      updateUserInterface();
+    }
+  } catch (error) {
+    console.error('Payment failed or was cancelled');
   }
-}`, "response-format")}
+}`, "async-modal")}
                   >
-                    {copied["response-format"] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied["async-modal"] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Hosting & Customization</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-3">You can self-host Buzz Zap Gateway and configure:</p>
-                
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="text-green-500 h-4 w-4 mr-2" />
-                    <span>Supported payment methods</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="text-green-500 h-4 w-4 mr-2" />
-                    <span>Preferred mints (Cashu)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="text-green-500 h-4 w-4 mr-2" />
-                    <span>Relay broadcasting logic</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="text-green-500 h-4 w-4 mr-2" />
-                    <span>Logging, webhook callbacks</span>
-                  </li>
-                </ul>
+
+                <div className="mt-5 p-3 border border-muted rounded-md bg-muted/20">
+                  <h4 className="font-medium mb-1">Note:</h4>
+                  <p className="text-sm text-muted-foreground">
+                    The modal script is lightweight (less than 10kb) and loads the full interface only when needed. 
+                    This ensures minimal impact on your site's performance while providing a seamless payment experience for your users.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
