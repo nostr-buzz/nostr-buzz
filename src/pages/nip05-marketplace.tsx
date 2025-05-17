@@ -71,7 +71,6 @@ export function Nip05MarketplacePage() {
       setIsLoading(false);
     }, 300);
   };
-
   return (
     <div className="w-full max-w-5xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
       {/* Back Button Container */}
@@ -83,14 +82,17 @@ export function Nip05MarketplacePage() {
           onClick={handleBackToHome}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Home
+          <span className="sm:inline">Back to Home</span>
+          <span className="sm:hidden">Back</span>
         </Button>
       </div>
 
-      <Card className="mb-6 bg-card">
-        <CardHeader>
-          <CardTitle>Find Your Perfect Nostr Identity</CardTitle>
-          <CardDescription>Search for available <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">name@nostr.buzz</code> identifiers.</CardDescription>
+      <Card className="mb-6 bg-card shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl md:text-2xl">Find Your Nostr Identity</CardTitle>
+          <CardDescription className="text-sm md:text-base">
+            Search for available <code className="bg-muted px-1 py-0.5 rounded-sm text-sm">name@nostr.buzz</code> identifiers.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
@@ -104,41 +106,39 @@ export function Nip05MarketplacePage() {
             />
           </div>
         </CardContent>
-      </Card>
-
-      {/* Suggestions Card - similar to Primal */}
+      </Card>      {/* Suggestions Card - similar to Primal */}
       {currentSuggestedName && (
-        <Card className="mb-6 bg-card">
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Identity for: <span className="text-primary">{currentSuggestedName}</span>@nostr.buzz
+        <Card className="mb-6 bg-card shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg md:text-xl">
+              Identity for: <span className="text-primary font-semibold break-all">{currentSuggestedName}</span>@nostr.buzz
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-              <div className="flex items-center">
-                <BadgeCheck className="h-5 w-5 mr-3 text-blue-500" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-md">
+              <div className="flex items-center mb-2 sm:mb-0">
+                <BadgeCheck className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
                 <span className="text-sm text-muted-foreground">Verified nostr address</span>
               </div>
-              <span className="text-sm font-medium">{currentSuggestedName}@nostr.buzz</span>
+              <span className="text-sm font-medium break-all">{currentSuggestedName}@nostr.buzz</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-              <div className="flex items-center">
-                <BoltIcon className="h-5 w-5 mr-3 text-yellow-500" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-md">
+              <div className="flex items-center mb-2 sm:mb-0">
+                <BoltIcon className="h-5 w-5 mr-3 text-yellow-500 flex-shrink-0" />
                 <span className="text-sm text-muted-foreground">Bitcoin lightning address</span>
               </div>
-              <span className="text-sm font-medium">{currentSuggestedName}@nostr.buzz</span>
+              <span className="text-sm font-medium break-all">{currentSuggestedName}@nostr.buzz</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-              <div className="flex items-center">
-                <LinkIcon className="h-5 w-5 mr-3 text-green-500" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-md">
+              <div className="flex items-center mb-2 sm:mb-0">
+                <LinkIcon className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
                 <span className="text-sm text-muted-foreground">Profile on nostr.buzz</span>
               </div>
               <a 
                 href={`https://nostr.buzz/${currentSuggestedName}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-primary hover:underline"
+                className="text-sm font-medium text-primary hover:underline break-all"
               >
                 nostr.buzz/{currentSuggestedName}
               </a>
@@ -151,34 +151,39 @@ export function Nip05MarketplacePage() {
       {filteredIdentifiers.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredIdentifiers.map((id) => (
-            <Card key={id.id} className={`bg-card flex flex-col justify-between ${!id.available ? 'opacity-70' : ''}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <Tag className="h-5 w-5 mr-2 text-primary" />
-                  {id.name}
+            <Card key={id.id} className={`bg-card flex flex-col justify-between ${!id.available ? 'opacity-70' : ''} shadow-sm hover:shadow transition-shadow`}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center flex-wrap text-lg md:text-xl">
+                  <Tag className="h-5 w-5 mr-2 text-primary flex-shrink-0" />
+                  <span className="font-semibold truncate">{id.name}</span>
                   <span className="text-muted-foreground text-lg">@</span>
-                  <span className="text-muted-foreground text-lg">{id.domain}</span>
+                  <span className="text-muted-foreground text-lg truncate">{id.domain}</span>
                 </CardTitle>
                 {id.available ? (
-                  <CardDescription className="flex items-center text-green-500">
-                    <CheckCircle className="h-4 w-4 mr-1" /> Available
+                  <CardDescription className="flex items-center text-green-500 mt-1">
+                    <CheckCircle className="h-4 w-4 mr-1 flex-shrink-0" /> Available
                   </CardDescription>
                 ) : (
-                  <CardDescription className="flex items-center text-red-500">
-                    <XCircle className="h-4 w-4 mr-1" /> Claimed
+                  <CardDescription className="flex items-center text-red-500 mt-1">
+                    <XCircle className="h-4 w-4 mr-1 flex-shrink-0" /> Claimed
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-4">
                 {!id.available && id.owner && (
                   <p className="text-xs text-muted-foreground break-all">Owner: {id.owner}</p>
+                )}
+                {id.available && (
+                  <p className="text-sm text-muted-foreground">
+                    Securely register this identifier to verify your Nostr identity.
+                  </p>
                 )}
               </CardContent>
               <CardFooter>
                 {id.available ? (
                   <Button className="w-full" onClick={() => handleBuyClick(id.name)}>
-                    <Zap className="h-4 w-4 mr-2" />
-                    Buy for {id.priceSatoshis.toLocaleString()} sats
+                    <Zap className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Buy for {id.priceSatoshis.toLocaleString()} sats</span>
                   </Button>
                 ) : (
                   <Button variant="secondary" className="w-full" disabled>
@@ -190,8 +195,8 @@ export function Nip05MarketplacePage() {
           ))}
         </div>
       ) : (
-        <Card className="bg-card">
-          <CardContent className="pt-6">
+        <Card className="bg-card shadow-sm">
+          <CardContent className="pt-6 pb-6">
             <p className="text-center text-muted-foreground">
               No identifiers found matching your search. Try a different name!
             </p>

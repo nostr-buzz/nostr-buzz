@@ -109,7 +109,6 @@ function SearchPage() {
       setIsLoading(false);
     }, 500);
   };
-
   return (
     <motion.div
       initial="initial"
@@ -117,49 +116,51 @@ function SearchPage() {
       exit="out"
       variants={pageVariants}
       transition={pageTransition}
-      className="flex flex-col items-center w-full max-w-xl"
+      className="flex flex-col items-center w-full max-w-xl px-4"
     >
       <img
         src={logoToUse}
         alt="NOSTR BUZZ"
-        className="h-52 w-auto mb-8"
+        className="h-32 sm:h-40 md:h-52 w-auto mb-6 sm:mb-8"
       />
 
       <form
-        className="w-full flex flex-col space-y-2"
+        className="w-full flex flex-col space-y-3"
         onSubmit={handleSearch}
       >
-        <div className="flex items-center space-x-2 rounded-full border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 shadow-md">
+        <div className="flex items-center rounded-full border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 shadow-md">
           <div className="pl-3 pr-1">
-            <Search className="size-5 text-muted-foreground" />
+            <Search className="size-4 sm:size-5 text-muted-foreground" />
           </div>
           <Input
             type="search"
             placeholder="Enter a Nostr npub or hex key..."
-            className="flex-grow h-10 px-0 py-2 text-base bg-transparent dark:bg-zinc-900 border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="flex-grow h-9 sm:h-10 px-0 py-1 sm:py-2 text-sm sm:text-base bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 placeholder:text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         {searchError && (
-          <div className="text-sm text-red-500 font-medium text-center mt-1">
+          <div className="text-sm text-red-500 font-medium text-center mt-1 animate-pulse">
             {searchError}
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground text-center">
-          Example: npub1z13g38a6qypp6py2z07shggg45cu8qex992xpss7d8zr128mu52s4cjajh
+        <div className="text-xs text-muted-foreground text-center mt-0 mb-2 px-4">
+          <span className="hidden sm:inline">Example: npub1z13g38a6qypp6py2z07shggg45cu8qex992xpss7d8zr128mu52s4cjajh</span>
+          <span className="sm:hidden">Enter a valid Nostr public key (npub)</span>
         </div>
       </form>
 
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <Button type="submit" size="sm" onClick={handleSearch}>
-          Search Nostr Profile
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:flex sm:flex-wrap justify-center gap-3 w-full">
+        <Button type="submit" size="default" onClick={handleSearch} className="w-full sm:w-auto">
+          <Search className="h-4 w-4 mr-2 flex-shrink-0" />
+          Search Profile
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => handleNavigation("/ecosystem")}>
-          <Compass className="h-4 w-4 mr-2" />
-          Ecosystem
+        <Button variant="secondary" size="default" onClick={() => handleNavigation("/ecosystem")} className="w-full sm:w-auto">
+          <Compass className="h-4 w-4 mr-2 flex-shrink-0" />
+          Explore Ecosystem
         </Button>
       </div>
     </motion.div>
@@ -168,20 +169,31 @@ function SearchPage() {
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-
   return (
     <AppContext.Provider value={{ isLoading, setIsLoading }}>
       <ThemeProvider defaultTheme="system" storageKey="theme">
         <NostrProvider>
           {isLoading && <GlobalSpinner />}
-          <div className="relative flex flex-col items-center justify-center min-h-svh p-4 bg-background text-foreground overflow-x-hidden">
-            <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
+          <div className="relative flex flex-col items-center justify-center min-h-svh p-0 sm:p-4 bg-background text-foreground overflow-x-hidden">
+            {/* Fixed bottom navigation for mobile, top-right for desktop */}
+            <div className="fixed bottom-0 left-0 right-0 flex justify-around items-center bg-card border-t p-2 z-50 sm:hidden">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Home">
+                <Search className="h-5 w-5" />
+              </Button>
               <StandaloneNip05Button /> 
               <StandaloneWalletButton /> 
               <ThemeToggle />
             </div>
-
+            
+            {/* Desktop navigation */}
+            <div className="absolute top-4 right-4 z-50 hidden sm:flex items-center space-x-2">
+              <StandaloneNip05Button /> 
+              <StandaloneWalletButton /> 
+              <ThemeToggle />
+            </div>
+              <div className="w-full pb-16 sm:pb-0">
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
                 <Route path="/" element={<SearchPage />} />
@@ -274,9 +286,9 @@ function App() {
                       <WalletPage />
                     </motion.div>
                   }
-                />
-              </Routes>
+                />              </Routes>
             </AnimatePresence>
+            </div>
           </div>
         </NostrProvider>
       </ThemeProvider>

@@ -21,10 +21,9 @@ export function EcosystemDirectoryPage() {
     }, 100);
     return () => clearTimeout(timer);
   }, [setIsLoading]);
-
   return (
     <div className="w-full max-w-6xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <Button
           variant="outline"
           size="default"
@@ -37,14 +36,14 @@ export function EcosystemDirectoryPage() {
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back
         </Button>
-        <h1 className="text-2xl md:text-3xl font-bold text-center flex items-center">
-          <Compass className="h-8 w-8 mr-3 text-primary" />
-          Nostr Ecosystem Directory
+        <h1 className="w-full sm:w-auto order-3 sm:order-2 text-2xl md:text-3xl font-bold text-center flex items-center justify-center">
+          <Compass className="h-7 w-7 md:h-8 md:w-8 mr-2 md:mr-3 text-primary flex-shrink-0" />
+          <span className="truncate">Nostr Ecosystem</span>
         </h1>
-        <div className="w-24 hidden md:block"></div>
+        <div className="w-24 hidden sm:block order-2 sm:order-3"></div>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         {ecosystemCategories.map((category) => {
           const IconComponent = LucideIcons[category.icon as string] || Compass;
           return (
