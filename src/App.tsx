@@ -28,7 +28,7 @@ import React from "react";
 import { StandaloneWalletButton } from "./components/standalone-wallet-button";
 import { JoinNostrWizardPage } from "@/pages/join-nostr-wizard";
 import { SearchResultsPage } from "@/pages/search-results";
-import { EventPage } from "@/pages/event-page";
+import EventViewer from "@/pages/event-viewer"; // Import the new component with default export
 
 interface AppContextType {
   isLoading: boolean;
@@ -239,7 +239,7 @@ function App() {
                   />
                   <Route
                     path="/event/:identifier"
-                    element={<EventPage />}
+                    element={<EventViewer />}
                   />
                   <Route
                     path="/profile"

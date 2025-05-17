@@ -178,7 +178,9 @@ const NoteCard = ({ event, relayUrl }: { event: Event, relayUrl: string }) => {
 };
 
 // Other Event Card Component
-const OtherEventCard = ({ event }: { event: Event, relayUrl: string }) => {
+const OtherEventCard = ({ event, relayUrl }: { event: Event, relayUrl: string }) => {
+  const navigate = useNavigate();
+  
   const getEventTypeLabel = (kind: number) => {
     switch (kind) {
       case 3: return 'Contact List';
@@ -195,8 +197,13 @@ const OtherEventCard = ({ event }: { event: Event, relayUrl: string }) => {
   
   const eventTypeLabel = getEventTypeLabel(event.kind);
   
+  const handleEventClick = () => {
+    // Navigate to event detail view, using the same method as NoteCard
+    navigate(`/event/${nip19.noteEncode(event.id)}`);
+  };
+  
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 hover:shadow-md transition-shadow cursor-pointer" onClick={handleEventClick}>
       <CardHeader className="py-3">
         <CardTitle className="text-sm font-medium">
           {eventTypeLabel}
@@ -214,8 +221,7 @@ const OtherEventCard = ({ event }: { event: Event, relayUrl: string }) => {
             <p className="text-sm text-muted-foreground italic">No content to display</p>
           )}
         </div>
-      </CardContent>
-      <CardFooter className="py-2">
+      </CardContent>      <CardFooter className="py-2">
         <div className="flex space-x-1 text-xs">
           {event.tags.slice(0, 3).map((tag, i) => (
             <Badge key={i} variant="outline" className="mr-1">
@@ -225,6 +231,9 @@ const OtherEventCard = ({ event }: { event: Event, relayUrl: string }) => {
           {event.tags.length > 3 && (
             <Badge variant="outline">+{event.tags.length - 3} more</Badge>
           )}
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground ml-auto">
+          <span>via {new URL(relayUrl).hostname}</span>
         </div>
       </CardFooter>
     </Card>
