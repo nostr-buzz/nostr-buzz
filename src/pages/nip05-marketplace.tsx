@@ -82,8 +82,7 @@ export function Nip05MarketplacePage() {
           onClick={handleBackToHome}
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          <span className="sm:inline">Back to Home</span>
-          <span className="sm:hidden">Back</span>
+          <span className="sm:inline">Back</span>
         </Button>
       </div>
 

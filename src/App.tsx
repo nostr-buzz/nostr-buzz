@@ -108,34 +108,29 @@ function SearchPage() {
       navigate(path);
       setIsLoading(false);
     }, 500);
-  };
-  return (
+  };  return (
     <motion.div
       initial="initial"
       animate="in"
       exit="out"
       variants={pageVariants}
       transition={pageTransition}
-      className="flex flex-col items-center w-full max-w-xl px-4"
-    >
-      <img
+      className="flex flex-col items-center w-full max-w-xl sm:max-w-2xl md:max-w-3xl mx-auto px-4 justify-center min-h-[85vh] py-10"
+    >      <img
         src={logoToUse}
         alt="NOSTR BUZZ"
-        className="h-32 sm:h-40 md:h-52 w-auto mb-6 sm:mb-8"
-      />
-
-      <form
-        className="w-full flex flex-col space-y-3"
+        className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto mb-6 sm:mb-8 md:mb-10"
+      /><form
+        className="w-full flex flex-col space-y-3 max-w-md sm:max-w-lg md:max-w-xl mx-auto"
         onSubmit={handleSearch}
-      >
-        <div className="flex items-center rounded-full border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 shadow-md">
-          <div className="pl-3 pr-1">
-            <Search className="size-4 sm:size-5 text-muted-foreground" />
+      >        <div className="flex items-center rounded-full border border-input bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background dark:focus-within:ring-offset-background_dark p-1.5 md:p-2 shadow-md">
+          <div className="pl-3 pr-1 md:pl-4">
+            <Search className="size-4 sm:size-5 md:size-6 text-muted-foreground" />
           </div>
           <Input
             type="search"
             placeholder="Enter a Nostr npub or hex key..."
-            className="flex-grow h-9 sm:h-10 px-0 py-1 sm:py-2 text-sm sm:text-base bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 placeholder:text-sm"
+            className="flex-grow h-9 sm:h-10 md:h-12 px-0 py-1 sm:py-2 text-sm sm:text-base md:text-lg bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70 placeholder:text-sm md:placeholder:text-base"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -145,20 +140,16 @@ function SearchPage() {
           <div className="text-sm text-red-500 font-medium text-center mt-1 animate-pulse">
             {searchError}
           </div>
-        )}
-
-        <div className="text-xs text-muted-foreground text-center mt-0 mb-2 px-4">
+        )}        <div className="text-xs md:text-sm text-muted-foreground text-center mt-0 mb-2 px-4">
           <span className="hidden sm:inline">Example: npub1z13g38a6qypp6py2z07shggg45cu8qex992xpss7d8zr128mu52s4cjajh</span>
           <span className="sm:hidden">Enter a valid Nostr public key (npub)</span>
         </div>
-      </form>
-
-      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:flex sm:flex-wrap justify-center gap-3 w-full">
-        <Button type="submit" size="default" onClick={handleSearch} className="w-full sm:w-auto">
+      </form>      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:flex sm:flex-wrap justify-center gap-3 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto">
+        <Button type="submit" size="default" onClick={handleSearch} className="w-full sm:w-auto md:px-6 md:text-lg">
           <Search className="h-4 w-4 mr-2 flex-shrink-0" />
           Search Profile
         </Button>
-        <Button variant="secondary" size="default" onClick={() => handleNavigation("/ecosystem")} className="w-full sm:w-auto">
+        <Button variant="secondary" size="default" onClick={() => handleNavigation("/ecosystem")} className="w-full sm:w-auto md:px-6 md:text-lg">
           <Compass className="h-4 w-4 mr-2 flex-shrink-0" />
           Explore Ecosystem
         </Button>
@@ -174,9 +165,8 @@ function App() {
   return (
     <AppContext.Provider value={{ isLoading, setIsLoading }}>
       <ThemeProvider defaultTheme="system" storageKey="theme">
-        <NostrProvider>
-          {isLoading && <GlobalSpinner />}
-          <div className="relative flex flex-col items-center justify-center min-h-svh p-0 sm:p-4 bg-background text-foreground overflow-x-hidden">
+        <NostrProvider>          {isLoading && <GlobalSpinner />}
+          <div className="relative flex flex-col items-center min-h-svh p-0 sm:p-4 bg-background text-foreground overflow-x-hidden">
             {/* Fixed bottom navigation for mobile, top-right for desktop */}
             <div className="fixed bottom-0 left-0 right-0 flex justify-around items-center bg-card border-t p-2 z-50 sm:hidden">
               <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Home">
@@ -192,8 +182,7 @@ function App() {
               <StandaloneNip05Button /> 
               <StandaloneWalletButton /> 
               <ThemeToggle />
-            </div>
-              <div className="w-full pb-16 sm:pb-0">
+            </div>              <div className="w-full pb-16 sm:pb-0 flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
                 <Route path="/" element={<SearchPage />} />
