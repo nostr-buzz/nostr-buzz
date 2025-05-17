@@ -32,6 +32,7 @@ import EventViewer from "@/pages/event-viewer"; // Import the new component with
 import { ZapGatewayPage } from "@/pages/zap-gateway";
 import { ZapHandlerPage } from "@/pages/zap-handler";
 import { StandaloneZapGatewayButton } from "@/components/standalone-zap-gateway-button";
+import PwaInstallPrompt from './components/pwa-install-prompt';
 
 interface AppContextType {
   isLoading: boolean;
@@ -213,6 +214,7 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { theme } = useTheme();
   return (
     <AppContext.Provider value={{ isLoading, setIsLoading }}>
       <ThemeProvider defaultTheme="system" storageKey="theme">
@@ -409,6 +411,7 @@ function App() {
                 </Routes>
               </AnimatePresence>
             </div>
+            <PwaInstallPrompt />
           </div>
         </NostrProvider>
       </ThemeProvider>
