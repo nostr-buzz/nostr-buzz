@@ -209,7 +209,7 @@ export function ZapHandlerPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-medium">Payment Method</label>
+                <label className="text-sm font-medium block mb-4">Payment Method</label>
                 <ZapMethodSelector
                   selectedMethod={selectedMethod}
                   onChange={handleMethodChange}
