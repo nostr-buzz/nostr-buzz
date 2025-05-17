@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
-  ArrowLeft, Wallet, Send, Download, History, Bitcoin, QrCode, ScanLine, Copy, Check, ExternalLink
+  ArrowLeft, Wallet, Send, Download, History, Bitcoin, QrCode, ScanLine, Copy, Check, ExternalLink,
+  Zap as ZapIcon, AlertCircle, Loader2, Camera, CameraOff, RefreshCw
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -27,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Html5Qrcode } from "html5-qrcode";
+import { ZapMethodSelector } from "@/components/zap-method-selector";
 
 
 const dummyTransactions = [
@@ -35,23 +37,30 @@ const dummyTransactions = [
   { id: "3", type: "received", amount: 100000, currency: "sats", date: "2023-10-24", description: "Zap from post", status: "pending" },
 ];
 
+type PaymentMethod = 'lightning' | 'cashu' | 'ark' | 'bitcoin';
 
-const DUMMY_LN_ADDRESS = "nostrbuzz@getalby.com";
+const DUMMY_LN_ADDRESS = "admin@nostr.buzz";
 const DUMMY_BTC_ADDRESS = "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
 export function WalletPage() {
   const navigate = useNavigate();
   const { setIsLoading } = useAppContext();
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState("wallet");
+  const [activeTab, setActiveTab] = useState("lightning");
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState<string>("");
+  const [scannerError, setScannerError] = useState<string | null>(null);
+  const [scannerInitializing, setScannerInitializing] = useState(false);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement | null>(null);
   const [sendAddress, setSendAddress] = useState("");
   const [sendAmount, setSendAmount] = useState("");
   const [sendNote, setSendNote] = useState("");
-  const [] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("lightning");
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<Array<{id: string, label: string}>>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string>("");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,12 +68,157 @@ export function WalletPage() {
     }, 100);
     return () => clearTimeout(timer);
   }, [setIsLoading]);
+  // Enhanced QR scanner initialization
+  useEffect(() => {
+    if (!isScannerOpen) return;
+    
+    const initializeCameraList = async () => {
+      try {
+        setScannerInitializing(true);
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length) {
+          setAvailableCameras(devices);
+          setSelectedCamera(devices[0].id);
+        } else {
+          setScannerError("No camera devices found");
+        }
+      } catch (err) {
+        console.error("Error getting cameras:", err);
+        setScannerError(`Error accessing cameras: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setScannerInitializing(false);
+      }
+    };
+
+    initializeCameraList();
+    
+    return () => {
+      if (html5QrCodeRef.current?.isScanning) {
+        html5QrCodeRef.current.stop().catch(console.error);
+      }
+    };
+  }, [isScannerOpen]);
+  
+  // Separate effect for starting the scanner with selected camera
+  useEffect(() => {
+    if (!showScanner || !scannerContainerRef.current || !selectedCamera) return;
+    
+    setScanResult("");
+    setScannerError(null);
+    setScannerInitializing(true);
+    
+    const containerId = "qr-scanner-container";
+    const containerElement = scannerContainerRef.current;
+    containerElement.innerHTML = '';  // Clear previous scanner elements
+    containerElement.id = containerId;
+    
+    const initializeScanner = async () => {
+      try {
+        // Stop any existing scanner
+        if (html5QrCodeRef.current?.isScanning) {
+          await html5QrCodeRef.current.stop();
+        }
+        
+        html5QrCodeRef.current = new Html5Qrcode(containerId);
+        
+        await html5QrCodeRef.current.start(
+          selectedCamera,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          (decodedText) => {
+            setScanResult(decodedText);
+            // Add a vibration feedback if supported
+            if (navigator.vibrate) {
+              navigator.vibrate(100);
+            }
+            console.log("QR Code detected:", decodedText);
+          },
+          (errorMessage) => {
+            // Silent error handling for frame errors
+            console.debug("QR scan frame error:", errorMessage);
+          }
+        );
+        setScannerInitializing(false);
+      } catch (err) {
+        console.error("Error initializing QR scanner:", err);
+        setScannerError(`Camera access error: ${err instanceof Error ? err.message : String(err)}`);
+        setScannerInitializing(false);
+      }
+    };
+
+    initializeScanner();
+    
+    return () => {
+      if (html5QrCodeRef.current?.isScanning) {
+        html5QrCodeRef.current.stop().catch(err => console.error("Failed to stop QR scanner:", err));
+      }
+    };
+  }, [showScanner, selectedCamera]);
+
+  // Handle camera switching
+  const handleCameraChange = async (cameraId: string) => {
+    if (html5QrCodeRef.current?.isScanning) {
+      await html5QrCodeRef.current.stop().catch(console.error);
+    }
+    setSelectedCamera(cameraId);
+  };
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+  // Enhanced retry scanner function
+  const handleRetryScanner = async () => {
+    setScannerError(null);
+    setScannerInitializing(true);
+    
+    if (html5QrCodeRef.current?.isScanning) {
+      await html5QrCodeRef.current.stop().catch(console.error);
+    }
+    
+    // Re-initialize the camera list
+    try {
+      const devices = await Html5Qrcode.getCameras();
+      if (devices && devices.length) {
+        setAvailableCameras(devices);
+        setSelectedCamera(devices[0].id);
+      } else {
+        setTimeout(() => {
+          setScannerError("No cameras found. Please ensure camera access is enabled.");
+          setScannerInitializing(false);
+        }, 500);
+      }
+    } catch (err) {
+      console.error("Error on camera retry:", err);
+      setScannerError(`Camera access error: ${err instanceof Error ? err.message : String(err)}`);
+      setScannerInitializing(false);
+    }
+  };
+
+  const handleZap = () => {
+    if (!sendAddress || !sendAmount) {
+      alert("Please enter recipient address and amount");
+      return;
+    }
+
+    setPaymentProcessing(true);
+    
+    // Extract pubkey from recipient address if it's a nostr address
+    // This is a simplification - in a real app you'd need proper nostr address parsing
+    let pubkey = sendAddress;
+    if (sendAddress.includes('@')) {
+      // For demo purposes, we'll use a dummy pubkey
+      pubkey = "npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp";
+    }
+    
+    // Navigate to zap handler with the appropriate parameters
+    const zapUrl = `/zap/${pubkey}?amount=${sendAmount}&method=${selectedPaymentMethod}&comment=${encodeURIComponent(sendNote)}`;
+    navigate(zapUrl);
   };
 
   return (
@@ -125,7 +279,8 @@ export function WalletPage() {
               <Button size="lg" variant="default" className="w-full h-14 text-base">
                 <Send className="h-5 w-5 mr-2 flex-shrink-0" /> Send
               </Button>
-            </DialogTrigger>          <DialogContent className="sm:max-w-md bg-card">
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-card">
               <DialogHeader className="pb-2">
                 <DialogTitle className="text-xl">Send Funds</DialogTitle>
                 <DialogDescription className="text-sm md:text-base">
@@ -161,20 +316,37 @@ export function WalletPage() {
                   <Label htmlFor="memo" className="text-sm font-medium">Memo (Optional)</Label>
                   <Textarea id="memo" placeholder="e.g., For coffee" className="resize-none" value={sendNote} onChange={(e) => setSendNote(e.target.value)} />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="payment-method" className="text-sm font-medium">Payment Method</Label>
+                  <ZapMethodSelector
+                    selectedMethod={selectedPaymentMethod}
+                    onChange={setSelectedPaymentMethod}
+                    disabled={paymentProcessing}
+                  />
+                </div>
               </div>
               <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => {}} className="w-full sm:w-auto order-2 sm:order-1">Cancel</Button>
                 <Button 
                   type="submit" 
-                  onClick={() => alert("Send action placeholder: Connect to WebLN or backend.")}
+                  onClick={handleZap}
+                  disabled={paymentProcessing || !sendAddress || !sendAmount}
                   className="w-full sm:w-auto order-1 sm:order-2"
                 >
-                  <Send className="h-4 w-4 mr-2 flex-shrink-0" />
-                  Confirm & Send
+                  {paymentProcessing ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <ZapIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+                      Confirm & Send
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>        <Dialog>
+          </Dialog>
+          
+          <Dialog>
             <DialogTrigger asChild>
               <Button size="lg" variant="outline" className="w-full h-14 text-base">
                 <Download className="h-5 w-5 mr-2 flex-shrink-0" /> Receive
@@ -237,18 +409,32 @@ export function WalletPage() {
                 <Button type="button" variant="outline" onClick={() => {}}>Done</Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>        <Dialog open={showScanner} onOpenChange={(open) => {
-            setShowScanner(open);
-            if (!open) {
-              if (html5QrCodeRef.current) {
-                html5QrCodeRef.current.stop().catch(err => console.error("Failed to stop QR scanner:", err));
+          </Dialog>
+          
+          {/* Enhanced Scanner Dialog */}
+          <Dialog 
+            open={isScannerOpen} 
+            onOpenChange={(open) => {
+              setIsScannerOpen(open);
+              if (!open) {
+                setShowScanner(false);
+                if (html5QrCodeRef.current?.isScanning) {
+                  html5QrCodeRef.current.stop().catch(err => console.error("Failed to stop QR scanner:", err));
+                }
               }
-            }
-          }}>
+            }}
+          >
             <DialogTrigger asChild>
-              <Button size="lg" variant="outline" className="w-full h-14 text-base" onClick={() => {
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full h-14 text-base" 
+                onClick={() => {
+                  setIsScannerOpen(true);
                   setScanResult("");
-                }}>
+                  setScannerError(null);
+                }}
+              >
                 <ScanLine className="h-5 w-5 mr-2 flex-shrink-0" /> Scan QR
               </Button>
             </DialogTrigger>
@@ -260,23 +446,151 @@ export function WalletPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4 flex flex-col items-center">
+                {/* Camera selection dropdown */}
+                {availableCameras.length > 0 && (
+                  <div className="w-full max-w-[320px] mb-2">
+                    <Label htmlFor="camera-select" className="text-sm font-medium mb-1 block">
+                      Select Camera
+                    </Label>
+                    <select
+                      id="camera-select"
+                      className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
+                      onChange={(e) => handleCameraChange(e.target.value)}
+                      value={selectedCamera}
+                      disabled={scannerInitializing}
+                    >
+                      {availableCameras.map(camera => (
+                        <option key={camera.id} value={camera.id}>
+                          {camera.label || `Camera ${camera.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Start scanner button */}
+                {!showScanner && !scannerInitializing && (
+                  <Button 
+                    variant="default"
+                    className="mb-2"
+                    onClick={() => setShowScanner(true)}
+                    disabled={!selectedCamera || scannerInitializing}
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Start Camera
+                  </Button>
+                )}
+                
+                {/* Stop scanner button */}
+                {showScanner && !scannerInitializing && (
+                  <Button 
+                    variant="outline"
+                    className="mb-2 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                    onClick={async () => {
+                      if (html5QrCodeRef.current?.isScanning) {
+                        await html5QrCodeRef.current.stop().catch(console.error);
+                      }
+                      setShowScanner(false);
+                    }}
+                  >
+                    <CameraOff className="h-4 w-4 mr-2" />
+                    Stop Camera
+                  </Button>
+                )}
+                
+                {/* Scanner container */}
                 <div 
                   ref={scannerContainerRef} 
-                  className="w-full max-w-[320px] aspect-square mb-4 bg-muted/70 rounded-md overflow-hidden border border-border shadow-sm"
+                  className={`w-full max-w-[320px] aspect-square mb-4 bg-muted/70 rounded-md overflow-hidden border border-border shadow-sm flex items-center justify-center ${!showScanner ? 'hidden' : ''}`}
                 >
+                  {scannerInitializing && (
+                    <div className="animate-pulse flex flex-col items-center">
+                      <Loader2 className="h-10 w-10 animate-spin text-primary mb-2" />
+                      <p className="text-sm text-muted-foreground">Initializing camera...</p>
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground min-h-[20px] text-center w-full px-4">
-                  {scanResult}
+                
+                {/* Scanner error display */}
+                {scannerError && (
+                  <div className="flex flex-col items-center p-4 bg-red-50 rounded-md w-full max-w-[320px]">
+                    <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+                    <p className="text-sm text-center mb-2 text-red-700">{scannerError}</p>
+                    <Button size="sm" variant="outline" onClick={handleRetryScanner} className="mt-1">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry Camera Access
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Scan result feedback */}
+                <p className="text-sm text-muted-foreground min-h-[20px] text-center w-full px-4 mt-2">
+                  {scanResult ? (
+                    <span className="text-green-600 font-medium">QR Code detected!</span>
+                  ) : (
+                    showScanner && !scannerError && !scannerInitializing && 
+                    "Ready to scan. Position QR code within the frame."
+                  )}
                 </p>
+                
+                {/* Scan result actions */}
                 {scanResult && (
-                  <div className="mt-2 p-2 bg-muted/50 rounded-md w-full max-w-[320px] text-center">
-                    <p className="text-xs text-green-600 font-medium">Scanned Successfully:</p>
-                    <p className="text-xs break-all">{scanResult.substring(0,40)}{scanResult.length > 40 ? "..." : ""}</p>
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md w-full max-w-[320px]">
+                    <p className="text-xs text-green-700 font-medium mb-1">Scanned Successfully:</p>
+                    <p className="text-sm break-all bg-white p-2 rounded border border-green-100 mb-3">
+                      {scanResult.length > 60 ? `${scanResult.substring(0,60)}...` : scanResult}
+                    </p>
+                    
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setSendAddress(scanResult);
+                          setIsScannerOpen(false);
+                        }}
+                      >
+                        Use as Address
+                      </Button>
+                      
+                      {scanResult.startsWith('lightning:') && (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="flex-1"
+                          onClick={() => {
+                            const lightningAddress = scanResult.replace('lightning:', '');
+                            setSendAddress(lightningAddress);
+                            setIsScannerOpen(false);
+                          }}
+                        >
+                          <ZapIcon className="h-4 w-4 mr-1" />
+                          Use Lightning Address
+                        </Button>
+                      )}
+                      
+                      {scanResult.startsWith('nostr:') && (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="flex-1"
+                          onClick={() => {
+                            const nostrUrl = scanResult.replace('nostr:', '');
+                            navigate(`/zap/${nostrUrl}`);
+                            setIsScannerOpen(false);
+                          }}
+                        >
+                          <ZapIcon className="h-4 w-4 mr-1" />
+                          Process Zap
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowScanner(false)} className="w-full sm:w-auto">
+                <Button variant="outline" onClick={() => setIsScannerOpen(false)} className="w-full sm:w-auto">
                   Close Scanner
                 </Button>
               </DialogFooter>
@@ -376,6 +690,91 @@ export function WalletPage() {
               <Button variant="link" size="sm">View all transactions <ExternalLink className="h-3 w-3 ml-1" /></Button>
             </CardFooter>
           )}
+        </Card>
+        
+        {/* Add Zap features section */}
+        <Card className="bg-card shadow-sm mt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-xl">
+              <ZapIcon className="h-5 w-5 mr-2 flex-shrink-0 text-yellow-500" />
+              Zap Features
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Quick Zap Templates */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="text-sm font-medium mb-2">Quick Zap Templates</h3>
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-between"
+                    onClick={() => {
+                      const zapUrl = `/zap/npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp?amount=1000&method=lightning&comment=${encodeURIComponent("Coffee tip!")}`;
+                      navigate(zapUrl);
+                    }}
+                  >
+                    <span className="flex items-center">
+                      <span className="mr-2">☕</span> Coffee Tip
+                    </span>
+                    <span className="text-muted-foreground text-xs">1,000 sats</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-between"
+                    onClick={() => {
+                      const zapUrl = `/zap/npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp?amount=5000&method=lightning&comment=${encodeURIComponent("Great content!")}`;
+                      navigate(zapUrl);
+                    }}
+                  >
+                    <span className="flex items-center">
+                      <span className="mr-2">🚀</span> Support 
+                    </span>
+                    <span className="text-muted-foreground text-xs">5,000 sats</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-between"
+                    onClick={() => {
+                      const zapUrl = `/zap/npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp?amount=10000&method=cashu&comment=${encodeURIComponent("Anonymous donation")}`;
+                      navigate(zapUrl);
+                    }}
+                  >
+                    <span className="flex items-center">
+                      <span className="mr-2">🔒</span> Private
+                    </span>
+                    <span className="text-muted-foreground text-xs">10,000 sats</span>
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Zap Features */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h3 className="text-sm font-medium mb-2">Zap Gateway</h3>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p>Send sats to anyone on Nostr using multiple payment methods</p>
+                  <ul className="list-disc list-inside space-y-1 pl-2">
+                    <li>Lightning Network payments</li>
+                    <li>Cashu Ecash tokens</li>
+                    <li>Ark L2 transfers (beta)</li>
+                    <li>Bitcoin on-chain (coming soon)</li>
+                  </ul>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="w-full mt-2"
+                    onClick={() => navigate('/zap-gateway')}
+                  >
+                    <ZapIcon className="h-4 w-4 mr-2" />
+                    Open Zap Gateway
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
