@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useNostr } from '@/context/NostrContext';
 import { useAppContext } from '@/App';
@@ -66,6 +66,65 @@ const parseProfileContent = (event: Event) => {
   }
 };
 
+// Enhanced profile fetching utility function
+const fetchProfileFromRelays = async (pubkey: string, pool: SimplePool, relays: string[]) => {
+  console.log(`Fetching search profile for ${pubkey}`);
+  
+  try {
+    // Try multiple reliable relays first
+    const profileRelays = [...new Set([
+      ...relays,
+      'wss://purplepag.es',
+      'wss://relay.nostr.band',
+      'wss://relay.damus.io'
+    ])];
+    
+    // Try with querySync first (most efficient for multiple relays)
+    const events = await pool.querySync(
+      profileRelays.slice(0, 3), // Limit to 3 relays for efficiency
+      { kinds: [0], authors: [pubkey], limit: 1 },
+      { maxWait: 2500 }
+    );
+    
+    if (events && events.length > 0) {
+      try {
+        return JSON.parse(events[0].content);
+      } catch (e) {
+        console.warn('Failed to parse profile JSON:', e);
+      }
+    }
+    
+    // Try individual relays as fallback
+    for (const relay of profileRelays) {
+      try {
+        const event = await pool.get(
+          [relay],
+          { kinds: [0], authors: [pubkey] },
+        );
+        
+        if (event) {
+          try {
+            return JSON.parse(event.content);
+          } catch (e) {
+            console.warn(`Failed to parse profile from ${relay}:`, e);
+          }
+        }
+      } catch (e) {
+        // Continue to next relay
+      }
+    }
+  } catch (e) {
+    console.error('Error in search profile fetching:', e);
+  }
+  
+  // Return basic profile if nothing found
+  return {
+    name: 'Unknown User',
+    about: 'No profile information available',
+    picture: ''
+  };
+};
+
 // Profile Card Component
 const ProfileCard = ({ event }: { event: Event, relayUrl: string }) => {
   const profile = parseProfileContent(event);
@@ -109,41 +168,46 @@ const ProfileCard = ({ event }: { event: Event, relayUrl: string }) => {
 // Note Card Component
 const NoteCard = ({ event, relayUrl }: { event: Event, relayUrl: string }) => {
   const [author, setAuthor] = useState<any>(null);
+  const [authorLoading, setAuthorLoading] = useState(true);
   const [pool] = useState(() => new SimplePool());
   const navigate = useNavigate();
   
+  // Load author profile efficiently
   useEffect(() => {
-    const fetchAuthor = async () => {
+    const loadAuthor = async () => {
+      setAuthorLoading(true);
       try {
-        const authorEvent = await pool.get(
-          [relayUrl, 'wss://relay.nostr.band', 'wss://relay.damus.io'],
-          {
-            kinds: [0],
-            authors: [event.pubkey],
-            limit: 1
-          }
+        const profileData = await fetchProfileFromRelays(
+          event.pubkey,
+          pool,
+          [relayUrl, 'wss://relay.nostr.band', 'wss://relay.damus.io']
         );
-        
-        if (authorEvent) {
-          setAuthor(parseProfileContent(authorEvent));
-        }
+        setAuthor(profileData);
       } catch (error) {
-        console.error('Error fetching author:', error);
+        console.error('Error fetching note author:', error);
+        setAuthor({
+          name: 'Unknown User',
+          picture: ''
+        });
+      } finally {
+        setAuthorLoading(false);
       }
     };
     
-    fetchAuthor();
+    loadAuthor();
     
     return () => {
-      // Clean up connections
       pool.close([relayUrl, 'wss://relay.nostr.band', 'wss://relay.damus.io']);
     };
   }, [event.pubkey, relayUrl, pool]);
   
   const handleNoteClick = () => {
-    // Navigate to event detail view with the full event data in state
     navigate(`/event/${nip19.noteEncode(event.id)}`, {
-      state: { event, relayUrl }
+      state: { 
+        event, 
+        relayUrl,
+        author // Pass the author data we already loaded
+      }
     });
   };
   
@@ -151,19 +215,31 @@ const NoteCard = ({ event, relayUrl }: { event: Event, relayUrl: string }) => {
     <Card className="mb-4 hover:shadow-md transition-shadow cursor-pointer" onClick={handleNoteClick}>
       <CardContent className="pt-4">
         <div className="flex items-center space-x-3 mb-3">
-          <Avatar className="h-8 w-8 border">
-            <img 
-              src={author?.picture || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"} 
-              alt={author?.name || 'Unknown'} 
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
-              }}
-            />
-          </Avatar>
-          <div>
-            <h4 className="font-medium">{author?.name || 'Unknown User'}</h4>
-            <span className="text-xs text-muted-foreground">{formatDate(event.created_at)}</span>
-          </div>
+          {authorLoading ? (
+            <>
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse"></div>
+              <div className="space-y-2">
+                <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                <div className="h-2 w-16 bg-muted animate-pulse rounded"></div>
+              </div>
+            </>
+          ) : (
+            <>
+              <Avatar className="h-8 w-8 border">
+                <img 
+                  src={author?.picture || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"} 
+                  alt={author?.name || 'Unknown'} 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
+                  }}
+                />
+              </Avatar>
+              <div>
+                <h4 className="font-medium">{author?.name || author?.display_name || 'Unknown User'}</h4>
+                <span className="text-xs text-muted-foreground">{formatDate(event.created_at)}</span>
+              </div>
+            </>
+          )}
         </div>
         
         <div className="prose prose-sm dark:prose-invert max-w-none">

@@ -59,6 +59,71 @@ const NOSTR_RELAYS = [
   'wss://eden.nostr.land'
 ];
 
+// Add a helper function for fetching profiles efficiently
+const fetchProfileFromRelays = async (pubkey: string, pool: SimplePool, relays: string[]) => {
+  console.log(`Fetching profile for ${pubkey} from ${relays.length} relays`);
+  
+  try {
+    // First try with querySync on multiple relays
+    const events = await pool.querySync(
+      relays,
+      { kinds: [0], authors: [pubkey], limit: 1 },
+      { maxWait: 3000 }
+    );
+    
+    if (events && events.length > 0) {
+      const profileContent = events[0].content;
+      try {
+        const parsed = JSON.parse(profileContent);
+        return {
+          pubkey,
+          npub: nip19.npubEncode(pubkey),
+          raw: events[0],
+          ...parsed
+        };
+      } catch (e) {
+        console.warn('Failed to parse profile JSON:', e);
+      }
+    }
+    
+    // If querySync fails, try individual relays
+    for (const relay of relays) {
+      try {
+        const event = await pool.get(
+          [relay],
+          { kinds: [0], authors: [pubkey] },
+        );
+        
+        if (event) {
+          try {
+            const parsed = JSON.parse(event.content);
+            return {
+              pubkey,
+              npub: nip19.npubEncode(pubkey),
+              raw: event,
+              ...parsed
+            };
+          } catch (e) {
+            console.warn(`Failed to parse profile from ${relay}:`, e);
+          }
+        }
+      } catch (e) {
+        // Continue to next relay
+      }
+    }
+  } catch (e) {
+    console.error('Error in profile fetching:', e);
+  }
+  
+  // Return basic profile if nothing found
+  return {
+    pubkey,
+    npub: nip19.npubEncode(pubkey),
+    name: 'Unknown User',
+    display_name: 'Unknown User'
+  };
+};
+
 // Define and export the component
 export default function EventViewer() {
   const { identifier } = useParams<{ identifier: string }>();
@@ -69,6 +134,7 @@ export default function EventViewer() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState(false);
+  const [authorLoading, setAuthorLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const { closeConnections } = useNostr();
   
@@ -80,80 +146,27 @@ export default function EventViewer() {
   const [pool] = useState(() => new SimplePool());
   
   useEffect(() => {
-    // Function to fetch author data
+    // Function to fetch author data - enhanced version
     const fetchAuthorProfile = async (pubkey: string, knownRelays: string[] = []) => {
       console.log('Fetching author profile for pubkey:', pubkey);
+      setAuthorLoading(true);
       
       try {
-        const relaysToTry = [...new Set([...(knownRelays || []), ...NOSTR_RELAYS])];
-        console.log('Looking for author profile on relays:', relaysToTry);
+        // Combine specific author-finding relays with provided relays
+        const authorRelays = [...new Set([
+          ...(knownRelays || []),
+          'wss://purplepag.es',
+          'wss://relay.primal.net',
+          'wss://relay.nostr.band',
+          'wss://relay.damus.io',
+          'wss://nos.lol',
+          'wss://relay.snort.social'
+        ])];
         
-        // Try to find author profile with multiple attempts
-        let attempts = 0;
-        let authorEvent = null;
-        
-        while (!authorEvent && attempts < 3) {
-          attempts++;
-          console.log(`Attempt ${attempts}/3 to fetch author profile`);
-          
-          try {
-            const events = await pool.querySync(
-              relaysToTry,
-              { kinds: [0], authors: [pubkey], limit: 1 },
-              { maxWait: 3000 + (attempts * 1000) }
-            );
-            
-            if (events && events.length > 0) {
-              authorEvent = events[0];
-              break;
-            }
-            
-            // Try each relay individually as fallback
-            for (const relay of relaysToTry) {
-              try {
-                const singleRelayEvent = await pool.get(
-                  [relay],
-                  { kinds: [0], authors: [pubkey] }
-                );
-                
-                if (singleRelayEvent) {
-                  authorEvent = singleRelayEvent;
-                  break;
-                }
-              } catch (err) {
-                // Continue to next relay
-              }
-            }
-            
-            if (!authorEvent && attempts < 3) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          } catch (attemptErr) {
-            console.warn(`Error in author profile fetch attempt ${attempts}:`, attemptErr);
-          }
-        }
-        
-        if (authorEvent) {
-          try {
-            const profileData = JSON.parse(authorEvent.content);
-            setAuthor({
-              pubkey,
-              npub: nip19.npubEncode(pubkey),
-              ...profileData
-            });
-            console.log('Found author profile:', profileData);
-            return;
-          } catch (e) {
-            console.error('Failed to parse profile data', e);
-          }
-        }
-        
-        // If no profile found or error parsing, set default author info
-        setAuthor({
-          pubkey,
-          npub: nip19.npubEncode(pubkey),
-          name: 'Unknown User'
-        });
+        // Try to fetch author profile with our helper function
+        const profileData = await fetchProfileFromRelays(pubkey, pool, authorRelays);
+        setAuthor(profileData);
+        console.log('Author profile loaded:', profileData);
       } catch (e) {
         console.error('Error fetching author profile:', e);
         setAuthor({
@@ -161,6 +174,8 @@ export default function EventViewer() {
           npub: nip19.npubEncode(pubkey),
           name: 'Unknown User'
         });
+      } finally {
+        setAuthorLoading(false);
       }
     };
     
@@ -390,10 +405,18 @@ export default function EventViewer() {
         </Card>
       ) : event ? (
         <div className="space-y-4">
-          {/* Author Info */}
-          {author && (
-            <Card className="mb-4">
-              <CardContent className="pt-4">
+          {/* Author Info - Enhanced with loading state */}
+          <Card className="mb-4">
+            <CardContent className="pt-4">
+              {authorLoading ? (
+                <div className="flex items-center space-x-4">
+                  <div className="h-12 w-12 rounded-full bg-muted animate-pulse"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+                    <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                  </div>
+                </div>
+              ) : (
                 <div 
                   className="flex items-center space-x-4 cursor-pointer" 
                   onClick={handleProfileClick}
@@ -401,7 +424,7 @@ export default function EventViewer() {
                   <Avatar className="h-12 w-12 border">
                     <img 
                       src={author?.picture || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"} 
-                      alt={author?.name || 'Unknown'} 
+                      alt={author?.name || author?.display_name || 'Unknown'} 
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
                       }}
@@ -414,11 +437,16 @@ export default function EventViewer() {
                     <p className="text-sm text-muted-foreground">
                       {author?.npub?.slice(0, 8)}...{author?.npub?.slice(-8)}
                     </p>
+                    {author?.about && (
+                      <p className="text-sm mt-2 text-muted-foreground line-clamp-2">
+                        {author.about}
+                      </p>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
           
           {/* Event Content */}
           <Card className="mb-4">
