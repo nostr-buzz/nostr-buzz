@@ -22,26 +22,40 @@ export function EcosystemDirectoryPage() {
     return () => clearTimeout(timer);
   }, [setIsLoading]);
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <Button
-          variant="outline"
-          size="default"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            setIsLoading(true);
-            setTimeout(() => navigate(-1), 300);
-          }}
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back
-        </Button>
-        <h1 className="w-full sm:w-auto order-3 sm:order-2 text-2xl md:text-3xl font-bold text-center flex items-center justify-center">
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">      <header className="mb-6 sm:mt-6 lg:mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-10 w-10"
+            onClick={() => {
+              setIsLoading(true);
+              navigate(-1);
+            }}
+            aria-label="Go back"
+            title="Go back to previous page"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="hidden sm:block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setIsLoading(true);
+                navigate('/');
+              }}
+            >
+              Home
+            </Button>
+          </div>
+        </div>
+        <h1 className="text-2xl md:text-3xl font-bold text-center flex items-center justify-center mt-4 mb-2">
           <Compass className="h-7 w-7 md:h-8 md:w-8 mr-2 md:mr-3 text-primary flex-shrink-0" />
-          <span className="truncate">Nostr Ecosystem</span>
+          <span>Nostr Ecosystem</span>
         </h1>
-        <div className="w-24 hidden sm:block order-2 sm:order-3"></div>
-      </div>
+      </header>
 
       <div className="space-y-6 md:space-y-8">
         {ecosystemCategories.map((category) => {

@@ -42,24 +42,53 @@ export function EcosystemItemPage() {
         </div>
     );
   }
-
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
-      <div className="mb-6 flex items-center">
-        <Button
-          variant="outline"
-          size="default"
-          className="text-muted-foreground hover:text-foreground mr-4"
-          onClick={() => {
-            setIsLoading(true);
-            
-            setTimeout(() => navigate(categorySlug ? `/ecosystem#${categorySlug}` : "/ecosystem"), 300);
-          }}
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to {category?.name || 'Directory'}
-        </Button>
-      </div>
+      <header className="mb-6 sm:mt-6 lg:mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-10 w-10"
+            onClick={() => {
+              setIsLoading(true);
+              navigate(-1);
+            }}
+            aria-label="Go back"
+            title="Go back to previous page"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="hidden sm:block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setIsLoading(true);
+                navigate('/ecosystem');
+              }}
+            >
+              Directory
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground ml-2"
+              onClick={() => {
+                setIsLoading(true);
+                navigate('/');
+              }}
+            >
+              Home
+            </Button>
+          </div>
+        </div>
+        <h1 className="text-2xl md:text-3xl font-bold text-center flex items-center justify-center mt-4 mb-2">
+          <Layers className="h-7 w-7 md:h-8 md:w-8 mr-2 md:mr-3 text-primary flex-shrink-0" />
+          <span>{item.name}</span>
+        </h1>
+      </header>
 
       <Card className="bg-card">
         <CardHeader className="flex flex-col md:flex-row md:items-start gap-6">

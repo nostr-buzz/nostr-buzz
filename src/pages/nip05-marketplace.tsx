@@ -70,21 +70,42 @@ export function Nip05MarketplacePage() {
       navigate('/');
       setIsLoading(false);
     }, 300);
-  };
-  return (
+  };  return (
     <div className="w-full max-w-5xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
-      {/* Back Button Container */}
-      <div className="mb-4 md:mb-6 self-start">
-        <Button
-          variant="outline"
-          size="default"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={handleBackToHome}
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          <span className="sm:inline">Back</span>
-        </Button>
-      </div>
+      <header className="mb-6 sm:mt-6 lg:mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-10 w-10"
+            onClick={() => {
+              setIsLoading(true);
+              navigate(-1);
+            }}
+            aria-label="Go back"
+            title="Go back to previous page"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="hidden sm:block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setIsLoading(true);
+                navigate('/');
+              }}
+            >
+              Home
+            </Button>
+          </div>
+        </div>
+        <h1 className="text-2xl md:text-3xl font-bold text-center flex items-center justify-center mt-4 mb-2">
+          <Tag className="h-7 w-7 md:h-8 md:w-8 mr-2 md:mr-3 text-primary flex-shrink-0" />
+          <span>NIP-05 Marketplace</span>
+        </h1>
+      </header>
 
       <Card className="mb-6 bg-card shadow-sm">
         <CardHeader className="pb-3">

@@ -155,24 +155,44 @@ export function ProfilePage() {
     if (!userProfile?.npub) return '#';
     return client.url.replace('{npub}', userProfile.npub);
   };
-
   return (
     <div className="w-full max-w-6xl mx-auto p-4 md:p-6 bg-background text-foreground flex flex-col">
-      {/* Back Button Container */}
-      <div className="mb-4 md:mb-6 self-start">
-        <Button
-          variant="outline"
-          size="default"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            setIsLoading(true);
-            setTimeout(() => navigate('/'), 300);
-          }}
-        >
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back
-        </Button>
-      </div>
+      <header className="mb-6 sm:mt-6 lg:mt-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground h-10 w-10"
+            onClick={() => {
+              setIsLoading(true);
+              navigate(-1);
+            }}
+            aria-label="Go back"
+            title="Go back to previous page"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="hidden sm:block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setIsLoading(true);
+                navigate('/');
+              }}
+            >
+              Home
+            </Button>
+          </div>
+        </div>
+        {userProfile && !loading && !localLoading && !error && (
+          <h1 className="text-2xl md:text-3xl font-bold text-center flex items-center justify-center mt-4 mb-2">
+            <Users className="h-7 w-7 md:h-8 md:w-8 mr-2 md:mr-3 text-primary flex-shrink-0" />
+            <span>Profile</span>
+          </h1>
+        )}
+      </header>
       {/* Loading state */}
       {(loading || localLoading) && (
         <div className="flex flex-col items-center justify-center py-16">
