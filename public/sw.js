@@ -4,6 +4,7 @@ const CACHE_NAME = 'nostr-buzz-v1';
 const APP_SHELL = [
   '/',
   '/index.html',
+  '/fallback.html',
   '/site.webmanifest',
   '/favicon.ico',
   '/favicon-16x16.png',
@@ -95,9 +96,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For page navigations, use network first strategy
+  // Handle navigation requests specially to support SPA routing
   if (event.request.mode === 'navigate') {
-    event.respondWith(networkFirstStrategy(event.request));
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          return caches.match('/index.html')
+            .then(response => response || caches.match('/fallback.html'))
+            .then(response => response || caches.match('/offline.html'))
+            .catch(() => {
+              // If all else fails, return a basic offline message
+              return new Response('Offline. Please try again when you have a network connection.', {
+                headers: { 'Content-Type': 'text/plain' }
+              });
+            });
+        })
+    );
     return;
   }
   
@@ -107,12 +121,12 @@ self.addEventListener('fetch', (event) => {
 
 // Cache-first strategy for static assets
 async function cacheFirstStrategy(request) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
   try {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
       const cache = await caches.open(CACHE_NAME + '-assets');
@@ -135,7 +149,7 @@ async function cacheFirstStrategy(request) {
   }
 }
 
-// Network-first strategy for API requests and navigation
+// Network-first strategy for API requests
 async function networkFirstStrategy(request) {
   try {
     const networkResponse = await fetch(request);
@@ -154,13 +168,10 @@ async function networkFirstStrategy(request) {
       return cachedResponse;
     }
     
-    // If both network and cache fail, return the offline page for navigations
-    if (request.mode === 'navigate') {
-      return caches.match('/offline.html');
-    }
-    
-    // For other requests, just throw the error
-    throw error;
+    // If both network and cache fail, return an offline response
+    return new Response(JSON.stringify({ error: 'You are offline' }), { 
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 

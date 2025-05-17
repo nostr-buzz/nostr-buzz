@@ -20,39 +20,55 @@ export async function registerServiceWorker() {
       
       // Set up service worker update check
       setupServiceWorkerUpdates(registration);
+      
+      return registration;
     } catch (error) {
       console.error('Service worker registration failed:', error);
+      return null;
     }
   }
+  return null;
 }
 
 // Function to check for service worker updates and handle them
 function setupServiceWorkerUpdates(registration: ServiceWorkerRegistration) {
+  if (!registration) return;
+  
   // Check for updates periodically
   setInterval(() => {
-    registration.update();
+    try {
+      registration.update();
+    } catch (e) {
+      console.error('Error updating service worker:', e);
+    }
   }, 60 * 60 * 1000); // Check every hour
   
   // Detect when an update is available
   let refreshing = false;
   
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
+  // Handle controller change safely
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      console.log('New service worker controller, refreshing page');
+      window.location.reload();
+    });
+  }
   
   // Show notification when update is available
-  registration.addEventListener('updatefound', () => {
-    const newWorker = registration.installing;
-    if (!newWorker) return;
-    
-    newWorker.addEventListener('statechange', () => {
-      if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-        showUpdateNotification();
-      }
+  if (registration) {
+    registration.addEventListener('updatefound', () => {
+      const newWorker = registration.installing;
+      if (!newWorker) return;
+      
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateNotification();
+        }
+      });
     });
-  });
+  }
 }
 
 // Show a notification when a new version of the app is available
@@ -169,9 +185,16 @@ export function setupNetworkStatusMonitoring() {
 
 // Initialize all PWA functionality
 export function initializePWA() {
-  registerServiceWorker();
-  checkInstallability();
-  setupNetworkStatusMonitoring();
+  try {
+    // Wrap in setTimeout to ensure DOM is fully loaded
+    setTimeout(() => {
+      registerServiceWorker();
+      checkInstallability();
+      setupNetworkStatusMonitoring();
+    }, 1000);
+  } catch (e) {
+    console.error('Error initializing PWA:', e);
+  }
 }
 
 // Export a default function for easy import

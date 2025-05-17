@@ -214,8 +214,7 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const { theme } = useTheme();
-  return (
+   return (
     <AppContext.Provider value={{ isLoading, setIsLoading }}>
       <ThemeProvider defaultTheme="system" storageKey="theme">
         <NostrProvider>
