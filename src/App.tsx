@@ -4,7 +4,7 @@ import logoDark from "/logo-b.png";
 import logoLight from "/logo-w.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Zap } from "lucide-react";
+import { Search } from "lucide-react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ProfilePage } from "@/pages/profile-page";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,22 +16,13 @@ import {
   type FormEvent,
 } from "react";
 import { GlobalSpinner } from "@/components/global-spinner";
-import { StandaloneNip05Button } from "@/components/standalone-nip05-button";
-import { Nip05MarketplacePage } from "@/pages/nip05-marketplace";
-import { EcosystemDirectoryPage } from "@/pages/ecosystem-directory";
-import { WalletPage } from "@/pages/wallet";
-import { EcosystemItemPage } from "@/pages/ecosystem-item";
-import { Compass, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { NostrProvider } from "@/context/NostrContext";
 import { useTheme } from "@/hooks/use-theme";
 import React from "react";
-import { StandaloneWalletButton } from "./components/standalone-wallet-button";
 import { JoinNostrWizardPage } from "@/pages/join-nostr-wizard";
 import { SearchResultsPage } from "@/pages/search-results";
-import EventViewer from "@/pages/event-viewer"; // Import the new component with default export
-import { ZapGatewayPage } from "@/pages/zap-gateway";
-import { ZapHandlerPage } from "@/pages/zap-handler";
-import { StandaloneZapGatewayButton } from "@/components/standalone-zap-gateway-button";
+import EventViewer from "@/pages/event-viewer";
 import PwaInstallPrompt from './components/pwa-install-prompt';
 
 interface AppContextType {
@@ -112,14 +103,6 @@ function SearchPage() {
   useEffect(() => {
     setIsLoading(false);
   }, [setIsLoading]);
-
-  const handleNavigation = (path: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      navigate(path);
-      setIsLoading(false);
-    }, 500);
-  };
   return (
     <motion.div
       initial="initial"
@@ -146,7 +129,7 @@ function SearchPage() {
           
           <Input
             type="search"
-            placeholder="Search Nostr: profiles, notes, events..."
+            placeholder="Search Nostr profiles, notes, events..."
             className="flex-grow h-10 sm:h-12 md:h-14 px-2 py-2 sm:py-3 text-base sm:text-lg md:text-xl bg-transparent dark:bg-transparent border-none focus:ring-0 focus:outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/70"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -161,7 +144,7 @@ function SearchPage() {
         
         <div className="text-sm md:text-base text-muted-foreground text-center mt-1 mb-3 px-4">
           <span className="hidden sm:inline">
-            Search for anything in Nostr: profiles, keywords, events, or enter an npub/note ID
+            Search for profiles, keywords, events, or enter an npub/note ID
           </span>
           <span className="sm:hidden">
             Search profiles, notes, or events
@@ -169,42 +152,9 @@ function SearchPage() {
         </div>
       </form>
       
-      <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 md:flex justify-center gap-4 md:gap-6 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto">
-        <Button
-          type="submit"
-          size="lg"
-          onClick={handleSearch}
-          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-xl transform hover:translate-y-[-2px] transition-all duration-300 "
-        >
-          <Search className="h-5 w-5 mr-3 flex-shrink-0" />
-          Search Nostr
-        </Button>
-        
-        <Button
-          variant="secondary"
-          size="lg"
-          onClick={() => handleNavigation("/ecosystem")}
-          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-xl transform hover:translate-y-[-2px] transition-all duration-300 bg-gradient-to-r from-zinc-200 to-zinc-300 hover:from-zinc-300 hover:to-zinc-400 dark:from-zinc-800 dark:to-zinc-700 dark:hover:from-zinc-700 dark:hover:to-zinc-600"
-        >
-          <Compass className="h-5 w-5 mr-3 flex-shrink-0" />
-          Explore Ecosystem
-        </Button>
-
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => handleNavigation("/zap-gateway")}
-          className="w-full sm:w-auto h-14 sm:h-16 md:px-8 text-lg sm:text-xl font-medium rounded-xl shadow-md hover:shadow-lg border-2 transform hover:translate-y-[-2px] transition-all duration-300 text-yellow-600 border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700 dark:text-yellow-400 dark:border-yellow-900 dark:hover:bg-yellow-950/50"
-        >
-          <Zap className="h-5 w-5 mr-3 flex-shrink-0" />
-          Buzz Zap Gateway
-        </Button>
-        
-      </div>
-      
       <div className="mt-10 sm:mt-12 md:mt-16 text-center text-sm sm:text-base text-muted-foreground">
-        <p className="mb-2 font-semibold">The #1 Gateway to Nostr</p>
-        <p>Explore the decentralized social network with powerful search</p>
+        <p className="mb-2 font-semibold">Simple Nostr Gateway</p>
+        <p>Search, explore, and join the decentralized social network</p>
       </div>
     </motion.div>
   );
@@ -239,9 +189,6 @@ function App() {
               >
                 <UserPlus className="h-5 w-5" />
               </Button>
-              <StandaloneZapGatewayButton />
-              <StandaloneNip05Button />
-              <StandaloneWalletButton />
               <ThemeToggle />
             </div>
             {/* Desktop navigation */}
@@ -255,9 +202,6 @@ function App() {
                 <UserPlus className="h-4 w-4 mr-1" />
                 Join Nostr
               </Button>
-              <StandaloneZapGatewayButton />
-              <StandaloneNip05Button />
-              <StandaloneWalletButton />
               <ThemeToggle />
             </div>{" "}
             <div className="w-full pb-16 sm:pb-0 flex flex-col items-center justify-center">
@@ -270,37 +214,6 @@ function App() {
                   <Route
                     path="/event/:identifier"
                     element={<EventViewer />}
-                  />
-                  {/* Zap Gateway Routes */}
-                  <Route
-                    path="/zap-gateway"
-                    element={
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                        className="w-full"
-                      >
-                        <ZapGatewayPage />
-                      </motion.div>
-                    }
-                  />
-                  <Route
-                    path="/zap/:pubkey"
-                    element={
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                        className="w-full"
-                      >
-                        <ZapHandlerPage />
-                      </motion.div>
-                    }
                   />
                   <Route
                     path="/profile"
@@ -329,66 +242,6 @@ function App() {
                         className="w-full"
                       >
                         <ProfilePage />
-                      </motion.div>
-                    }
-                  />
-                  <Route
-                    path="/nip05-marketplace"
-                    element={
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                        className="w-full"
-                      >
-                        <Nip05MarketplacePage />
-                      </motion.div>
-                    }
-                  />
-                  <Route
-                    path="/ecosystem"
-                    element={
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                        className="w-full"
-                      >
-                        <EcosystemDirectoryPage />
-                      </motion.div>
-                    }
-                  />
-                  <Route
-                    path="/ecosystem/:categorySlug/:itemSlug"
-                    element={
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                        className="w-full"
-                      >
-                        <EcosystemItemPage />
-                      </motion.div>
-                    }
-                  />
-                  <Route
-                    path="/wallet"
-                    element={
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                        className="w-full"
-                      >
-                        <WalletPage />
                       </motion.div>
                     }
                   />
