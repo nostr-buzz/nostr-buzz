@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buzz Zap Modal Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin: 40px 0;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h1 {
+            color: #0080ff;
+            margin: 0;
+        }
+        
+        .tagline {
+            color: #666;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        
+        .section {
+            margin: 40px 0;
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+        }
+        
+        .demo-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+        }
+        
+        .buttons-container {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            background-color: #0080ff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            background-color: #0066cc;
+            transform: translateY(-2px);
+        }
+        
+        .alt-button {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .alt-button:hover {
+            background-color: #e6e6e6;
+        }
+        
+        .tip-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tip-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+        
+        .tip-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .tip-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .tip-amount {
+            font-weight: bold;
+        }
+        
+        .tip-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        code {
+            display: block;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #eee;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #eaeaea;
+        }
+        
+        body.dark-mode .header,
+        body.dark-mode h2,
+        body.dark-mode .footer {
+            border-color: #333;
+        }
+        
+        body.dark-mode h1 {
+            color: #0099ff;
+        }
+        
+        body.dark-mode .demo-box {
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+        
+        body.dark-mode .alt-button {
+            background-color: #333;
+            color: #eee;
+            border-color: #555;
+        }
+        
+        body.dark-mode .alt-button:hover {
+            background-color: #444;
+        }
+        
+        body.dark-mode code {
+            background-color: #2a2a2a;
+            color: #eee;
+        }
+        
+        body.dark-mode .tip-button {
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+        
+        body.dark-mode .tip-label {
+            color: #aaa;
+        }
+        
+        @media (max-width: 600px) {
+            .buttons-container {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .tip-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
+    </div>
+
+    <div class="header">
+        <h1>Buzz Zap Modal Demo</h1>
+        <p class="tagline">A simple demonstration of the Nostr Buzz Zap Gateway</p>
+    </div>
+
+    <div class="section">
+        <h2>Simple Integration Example</h2>
+        <p>
+            Click the button below to open a basic zap modal for tipping. This demo uses a test Nostr public key.
+        </p>
+        
+        <div class="demo-box">
+            <button onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp')">
+                Open Zap Modal ⚡
+            </button>
+            
+            <p><strong>Note:</strong> This uses the default options with Lightning payment method.</p>
+        </div>
+        
+        <code>
+            // Basic usage:
+            openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp');
+        </code>
+    </div>
+    
+    <div class="section">
+        <h2>Preset Tip Amounts</h2>
+        <p>
+            These buttons show how to create preset tipping options with different amounts and messages.
+        </p>
+        
+        <div class="demo-box">
+            <div class="tip-buttons">
+                <div class="tip-button" onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {amount: 1000, comment: 'Coffee tip!'})">
+                    <span class="tip-icon">☕</span>
+                    <span class="tip-amount">1,000</span>
+                    <span class="tip-label">Coffee</span>
+                </div>
+                
+                <div class="tip-button" onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {amount: 5000, comment: 'Thanks for your work!'})">
+                    <span class="tip-icon">🙏</span>
+                    <span class="tip-amount">5,000</span>
+                    <span class="tip-label">Thanks</span>
+                </div>
+                
+                <div class="tip-button" onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {amount: 10000, method: 'cashu', comment: 'Private donation'})">
+                    <span class="tip-icon">🔒</span>
+                    <span class="tip-amount">10,000</span>
+                    <span class="tip-label">Private</span>
+                </div>
+                
+                <div class="tip-button" onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {amount: 21000, comment: 'Big support!'})">
+                    <span class="tip-icon">💎</span>
+                    <span class="tip-amount">21,000</span>
+                    <span class="tip-label">Big Support</span>
+                </div>
+            </div>
+        </div>
+        
+        <code>
+            // With custom options:
+            openZapModal('npub1...', {
+                amount: 5000,              // in millisatoshis
+                method: 'lightning',       // or 'cashu', 'ark'
+                comment: 'Thanks!',        // optional comment
+                theme: isDarkMode ? 'dark' : 'light' // match user preference
+            });
+        </code>
+    </div>
+    
+    <div class="section">
+        <h2>Payment Methods</h2>
+        <p>
+            The Buzz Zap Gateway supports multiple payment methods. Choose your preferred option:
+        </p>
+        
+        <div class="demo-box">
+            <div class="buttons-container">
+                <button onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {method: 'lightning', amount: 3000})">
+                    ⚡ Lightning
+                </button>
+                
+                <button class="alt-button" onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {method: 'cashu', amount: 3000})">
+                    🪙 Cashu (Ecash)
+                </button>
+                
+                <button class="alt-button" onclick="openZapModal('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {method: 'ark', amount: 3000})">
+                    🌀 Ark
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Advanced Usage Example</h2>
+        <p>
+            This example shows how to use the promise-based API to handle zap results programmatically.
+        </p>
+        
+        <div class="demo-box">
+            <button id="advanced-button" onclick="handleAdvancedDonation()">
+                Advanced Donation Example
+            </button>
+            <div id="result-container" style="margin-top: 15px; display: none;"></div>
+        </div>
+        
+        <code>
+            // Using promise-based API:
+            async function handleAdvancedDonation() {
+                try {
+                    const result = await BuzzZapModal.openAsync('npub1...', {
+                        amount: 5000,
+                        method: 'lightning'
+                    });
+                    
+                    if (result.status === 'ok') {
+                        // Handle successful payment
+                        console.log('Payment successful:', result);
+                        // Update UI
+                        document.getElementById('result-container').innerHTML = 
+                            'Payment successful! ID: ' + result.payment.id;
+                        document.getElementById('result-container').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Payment failed or was cancelled');
+                    document.getElementById('result-container').innerHTML = 
+                        'Payment failed or was cancelled';
+                    document.getElementById('result-container').style.display = 'block';
+                }
+            }
+        </code>
+    </div>
+    
+    <div class="section">
+        <h2>Customization Example</h2>
+        <p>
+            The modal can be customized to match your site's branding. This example shows a custom colored modal.
+        </p>
+        
+        <div class="demo-box">
+            <button style="background-color: #ff6b6b;" onclick="openCustomZapModal()">
+                Custom Styled Modal
+            </button>
+        </div>
+        
+        <code>
+            // Custom styling:
+            function openCustomZapModal() {
+                // First configure the modal appearance
+                BuzzZapModal.config({
+                    primaryColor: '#ff6b6b',
+                    logo: 'https://nostr.buzz/logo.png',
+                    i18n: {
+                        title: 'Support this project',
+                        payButton: 'Send Support',
+                    }
+                });
+                
+                // Then open the modal
+                BuzzZapModal.open('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {
+                    amount: 4200,
+                    comment: 'Custom styled zap'
+                });
+            }
+        </code>
+    </div>
+
+    <div class="footer">
+        <p>Buzz Zap Gateway Modal Demo</p>
+        <p>For more information, visit <a href="https://nostr.buzz">nostr.buzz</a></p>
+    </div>
+
+    <!-- Add favicon to prevent 404 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+    <!-- Load the Zap Modal script -->
+    <script src="../js/zap-modal.min.js"></script>
+    
+    <script>
+        // Track dark/light mode for theme-aware modal
+        let isDarkMode = false;
+        
+        // Function to toggle between dark and light mode
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            
+            if (isDarkMode) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            }
+        }
+        
+        // Wait for DOM to be fully loaded and BuzzZapModal to be available
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the BuzzZapModal with default settings
+            if (typeof BuzzZapModal !== 'undefined') {
+                BuzzZapModal.config({
+                    i18n: {
+                        title: "Support via Zap",
+                        payButton: "Send Zap",
+                        cancelButton: "Cancel",
+                        amountLabel: "Amount (sats)",
+                        methodLabel: "Payment Method",
+                        commentLabel: "Comment (optional)",
+                        successMessage: "Payment Successful!",
+                        errorMessage: "Payment Failed",
+                        loadingMessage: "Processing...",
+                        lightning: "Lightning",
+                        cashu: "Cashu",
+                        ark: "Ark"
+                    }
+                });
+                console.log('BuzzZapModal initialized successfully');
+            } else {
+                console.error('BuzzZapModal is not available. Check if zap-modal.min.js loaded correctly.');
+            }
+        });
+        
+        // Basic zap modal function with error handling
+        function openZapModal(pubkey, options = {}) {
+            if (typeof BuzzZapModal === 'undefined') {
+                console.error('BuzzZapModal not loaded');
+                showNotification('Error: Payment modal not available');
+                return;
+            }
+            
+            const defaultOptions = {
+                amount: 1000, // millisats
+                method: 'lightning',
+                comment: '',
+                theme: isDarkMode ? 'dark' : 'light',
+                title: 'Support via Zap',
+                position: 'center',
+                onSuccess: (data) => {
+                    console.log('Payment successful:', data);
+                    showNotification('Payment successful!');
+                },
+                onClose: () => console.log('Modal closed')
+            };
+            
+            try {
+                const mergedOptions = {...defaultOptions, ...options};
+                BuzzZapModal.open(pubkey, mergedOptions);
+            } catch (error) {
+                console.error('Error opening zap modal:', error);
+                showNotification('Error opening payment modal');
+            }
+        }
+        
+        // Advanced example with promise-based API and better error handling
+        async function handleAdvancedDonation() {
+            if (typeof BuzzZapModal === 'undefined') {
+                console.error('BuzzZapModal not loaded');
+                const resultContainer = document.getElementById('result-container');
+                resultContainer.innerHTML = `
+                    <div style="padding: 10px; background-color: ${isDarkMode ? '#462020' : '#f8d7da'};
+                    color: ${isDarkMode ? '#c99292' : '#721c24'}; border-radius: 4px;">
+                        Error: Payment modal not available
+                    </div>
+                `;
+                resultContainer.style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('advanced-button').disabled = true;
+            document.getElementById('advanced-button').textContent = 'Processing...';
+            
+            try {
+                const result = await BuzzZapModal.openAsync('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {
+                    amount: 5000,
+                    method: 'lightning',
+                    theme: isDarkMode ? 'dark' : 'light',
+                    title: 'Advanced Donation',
+                    payButton: 'Send Donation'
+                });
+                
+                console.log('Payment result:', result);
+                
+                const resultContainer = document.getElementById('result-container');
+                if (result && result.status === 'ok') {
+                    resultContainer.innerHTML = `
+                        <div style="padding: 10px; background-color: ${isDarkMode ? '#1e4620' : '#d4edda'}; 
+                        color: ${isDarkMode ? '#98c992' : '#155724'}; border-radius: 4px;">
+                            Payment successful! Transaction ID: ${result.payment?.id || 'N/A'}
+                        </div>
+                    `;
+                } else {
+                    resultContainer.innerHTML = `
+                        <div style="padding: 10px; background-color: ${isDarkMode ? '#462020' : '#f8d7da'};
+                        color: ${isDarkMode ? '#c99292' : '#721c24'}; border-radius: 4px;">
+                            Payment had issues: ${result?.message || 'Unknown error'}
+                        </div>
+                    `;
+                }
+                resultContainer.style.display = 'block';
+            } catch (error) {
+                console.error('Payment error:', error);
+                const resultContainer = document.getElementById('result-container');
+                resultContainer.innerHTML = `
+                    <div style="padding: 10px; background-color: ${isDarkMode ? '#462020' : '#f8d7da'};
+                    color: ${isDarkMode ? '#c99292' : '#721c24'}; border-radius: 4px;">
+                        Payment failed or was cancelled
+                    </div>
+                `;
+                resultContainer.style.display = 'block';
+            } finally {
+                document.getElementById('advanced-button').disabled = false;
+                document.getElementById('advanced-button').textContent = 'Advanced Donation Example';
+            }
+        }
+        
+        // Custom styled modal example with error handling
+        function openCustomZapModal() {
+            if (typeof BuzzZapModal === 'undefined') {
+                console.error('BuzzZapModal not loaded');
+                showNotification('Error: Payment modal not available');
+                return;
+            }
+            
+            try {
+                // First configure the modal appearance
+                BuzzZapModal.config({
+                    primaryColor: '#ff6b6b',
+                    logo: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>', // Inline SVG to avoid 404
+                    i18n: {
+                        title: 'Support this project',
+                        payButton: 'Send Support',
+                        cancelButton: "Cancel",
+                        amountLabel: "Amount (sats)",
+                        methodLabel: "Payment Method",
+                        commentLabel: "Comment (optional)",
+                        successMessage: "Payment Successful!",
+                        errorMessage: "Payment Failed",
+                        loadingMessage: "Processing...",
+                        lightning: "Lightning",
+                        cashu: "Cashu",
+                        ark: "Ark"
+                    }
+                });
+                
+                // Then open the modal
+                BuzzZapModal.open('npub1tapj48eekk8lzvhupfxg4ugdgthaj97cqahk3wml97g76l20dfqspmpjyp', {
+                    amount: 4200,
+                    comment: 'Custom styled zap',
+                    theme: isDarkMode ? 'dark' : 'light'
+                });
+            } catch (error) {
+                console.error('Error opening custom zap modal:', error);
+                showNotification('Error opening custom payment modal');
+            }
+        }
+        
+        // Helper function to show a notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.backgroundColor = isDarkMode ? '#2a2a2a' : '#fff';
+            notification.style.color = isDarkMode ? '#fff' : '#333';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = '4px';
+            notification.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+            notification.style.zIndex = '9999';
+            notification.style.transition = 'all 0.3s ease';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Check for system dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            toggleTheme();
+        }
+    </script>
+</body>
+</html>

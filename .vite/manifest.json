@@ -1,0 +1,31 @@
+{
+  "_pwa-core-DtAGVdgg.js": {
+    "file": "assets/pwa-core-DtAGVdgg.js",
+    "name": "pwa-core"
+  },
+  "_react-vendor-LTN471s4.js": {
+    "file": "assets/react-vendor-LTN471s4.js",
+    "name": "react-vendor"
+  },
+  "_ui-vendor-WQ7HtlCj.js": {
+    "file": "assets/ui-vendor-WQ7HtlCj.js",
+    "name": "ui-vendor",
+    "imports": [
+      "_react-vendor-LTN471s4.js"
+    ]
+  },
+  "index.html": {
+    "file": "assets/index-WSkIAPkp.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_ui-vendor-WQ7HtlCj.js",
+      "_react-vendor-LTN471s4.js",
+      "_pwa-core-DtAGVdgg.js"
+    ],
+    "css": [
+      "assets/index-mr_z0Tio.css"
+    ]
+  }
+}

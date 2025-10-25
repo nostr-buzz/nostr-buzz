@@ -1,0 +1,17 @@
+{
+  "names": {
+    "milad": "5f432a9f39b58ff132fc0a4c8af10d42efd917d8076f68bb7f2f91ed7d4f6a41"
+  },
+  "relays": {
+    "5f432a9f39b58ff132fc0a4c8af10d42efd917d8076f68bb7f2f91ed7d4f6a41": [
+      "wss://nos.lol/",
+      "wss://nostr-1.nbo.angani.co/",
+      "wss://relay.angor.io/",
+      "wss://relay.damus.io/",
+      "wss://relay.nostr.band/",
+      "wss://relay.primal.net/",
+      "wss://relay.snort.social/",
+      "wss://nostr-pub.wellorder.net/"
+    ]
+  }
+}
