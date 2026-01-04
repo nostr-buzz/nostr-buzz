@@ -1,1 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary Meta Tags -->
+  <title>NOSTR.BUZZ</title>
+  <meta name="title" content="NOSTR.BUZZ">
+  <meta name="description" content="The Future is Buzzing!">
+  <meta name="keywords" content="nostr, nostr buzz, decentralized social network, nostr clients, nostria, yakihonne, primal, censorship-resistant, social media, web3, decentralized communication">
+  <meta name="author" content="NOSTR.BUZZ">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  <meta name="revisit-after" content="7 days">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://nostr.buzz/">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nostr.buzz/">
+  <meta property="og:title" content="NOSTR.BUZZ">
+  <meta property="og:description" content="The Future is Buzzing!">
+  <meta property="og:image" content="https://nostr.buzz/imgs/logo.png">
+  <meta property="og:image:alt" content="NOSTR.BUZZ">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="NOSTR.BUZZ">
+  <meta property="og:locale" content="en_US">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://nostr.buzz/">
+  <meta name="twitter:title" content="NOSTR.BUZZ">
+  <meta name="twitter:description" content="The Future is Buzzing!">
+  <meta name="twitter:image" content="https://nostr.buzz/imgs/logo.png">
+  <meta name="twitter:image:alt" content="NOSTR.BUZZ Logo">
+  <meta name="twitter:creator" content="@nostrbuzz">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/imgs/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/imgs/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/imgs/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/imgs/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/imgs/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/imgs/android-chrome-512x512.png">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#1a1a1a">
+  <meta name="msapplication-TileColor" content="#1a1a1a">
+  
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "NOSTR.BUZZ",
+    "url": "https://nostr.buzz/",
+    "description": "The Future is Buzzing!",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://nostr.buzz/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%) fixed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(100, 100, 100, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      top: -200px;
+      right: -200px;
+      animation: float 8s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(80, 80, 80, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      bottom: -150px;
+      left: -150px;
+      animation: float 10s ease-in-out infinite reverse;
+      z-index: 0;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0) translateX(0);
+      }
+      50% {
+        transform: translateY(-30px) translateX(20px);
+      }
+    }
+
+    .container {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+    }
+
+    .hero-title .title-text {
+      color: #ffffff;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% {
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+      }
+      50% {
+        filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.5));
+      }
+    }
+
+    .buzz-logo {
+      display: block;
+      width: clamp(80px, 12vw, 120px);
+      height: auto;
+      margin: 0 auto 1.5rem;
+      animation: buzz 2s ease-in-out infinite;
+      filter: drop-shadow(0 4px 12px rgba(234, 179, 8, 0.5)) 
+              drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+    }
+
+    @keyframes buzz {
+      0%, 100% {
+        transform: rotate(0deg) translateY(0);
+      }
+      25% {
+        transform: rotate(-5deg) translateY(-5px);
+      }
+      75% {
+        transform: rotate(5deg) translateY(-5px);
+      }
+    }
+
+    .subtitle {
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 3rem;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .clients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+      padding: 0 10px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .client-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .client-card a {
+      text-decoration: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .client-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      border-radius: 20px;
+    }
+
+    .client-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 8px 40px rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .client-card:hover::before {
+      opacity: 1;
+    }
+
+    .client-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.2rem;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.4s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .client-card:hover .client-icon {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 
+        0 12px 32px rgba(255, 255, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
+
+    .client-icon img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+    }
+
+    .client-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0;
+      letter-spacing: -0.3px;
+    }
+
+    @media (max-width: 768px) {
+      .clients-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+        max-width: 400px;
+      }
+
+      .client-card {
+        padding: 1.5rem 1.2rem;
+      }
+
+      .hero-title {
+        font-size: clamp(1.8rem, 8vw, 2.5rem);
+      }
+
+      .subtitle {
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+      }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .clients-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 700px;
+      }
+    }
+
+    @media (min-width: 1025px) {
+      .clients-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+ 
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="Buzz Logo" class="buzz-logo">
+    <h1 class="hero-title">
+      <span class="title-text">The Future is Buzzing!</span>
+    </h1>
+    <p class="subtitle">DISCOVER DECENTRALIZED SOCIAL NETWORKS</p>
+
+    <main>
+      <section class="clients-grid" aria-label="Nostr Clients Directory">
+        <!-- Nostria -->
+        <article class="client-card">
+          <a href="https://nostria.app/" target="_blank" rel="noopener noreferrer" aria-label="Visit Nostria - A modern Nostr client">
+            <div class="client-icon">
+              <img src="https://www.google.com/s2/favicons?domain=nostria.app&sz=128" alt="Nostria logo" width="48" height="48" loading="lazy">
+            </div>
+            <h3 class="client-name">Nostria</h3>
+          </a>
+        </article>
+
+        <!-- Yakihonne -->
+        <article class="client-card">
+          <a href="https://yakihonne.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit Yakihonne - A decentralized Nostr platform">
+            <div class="client-icon">
+              <img src="https://www.google.com/s2/favicons?domain=yakihonne.com&sz=128" alt="Yakihonne logo" width="48" height="48" loading="lazy">
+            </div>
+            <h3 class="client-name">Yakihonne</h3>
+          </a>
+        </article>
+
+        <!-- Primal -->
+        <article class="client-card">
+          <a href="https://primal.net/" target="_blank" rel="noopener noreferrer" aria-label="Visit Primal - A powerful Nostr client">
+            <div class="client-icon">
+              <img src="https://www.google.com/s2/favicons?domain=primal.net&sz=128" alt="Primal logo" width="48" height="48" loading="lazy">
+            </div>
+            <h3 class="client-name">Primal</h3>
+          </a>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
